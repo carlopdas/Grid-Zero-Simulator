@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -56,32 +57,44 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
           onValueChange={(value) => onChange(value as AnalysisMode)}
           className="grid grid-cols-1 gap-4 sm:grid-cols-3"
         >
-          {modes.map((m) => {
+          {modes.map((m, index) => {
             const Icon = m.icon
             const isSelected = mode === m.value
             return (
-              <Label
+              <motion.div
                 key={m.value}
-                htmlFor={m.value}
-                className={cn(
-                  "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-all backdrop-blur-sm",
-                  isSelected 
-                    ? "border-[#3b82f6]/50 bg-gradient-to-br from-[#3b82f6]/10 to-[#8b5cf6]/10" 
-                    : "border-white/10 bg-white/5 hover:border-[#3b82f6]/30 hover:bg-white/10"
-                )}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <RadioGroupItem value={m.value} id={m.value} className="sr-only" />
-                <div className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-full",
-                  isSelected ? "bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20" : "bg-white/5"
-                )}>
-                  <Icon className={cn("h-6 w-6", isSelected ? m.color : "text-muted-foreground")} />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">{m.label}</p>
-                  <p className="text-xs text-muted-foreground">{m.description}</p>
-                </div>
-              </Label>
+                <Label
+                  htmlFor={m.value}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-all backdrop-blur-sm h-full",
+                    isSelected 
+                      ? "border-[#3b82f6]/50 bg-gradient-to-br from-[#3b82f6]/10 to-[#8b5cf6]/10 ring-2 ring-blue-500/30 shadow-lg shadow-blue-100 dark:shadow-blue-900/20" 
+                      : "border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-blue-400 hover:bg-white/80 dark:hover:bg-white/10"
+                  )}
+                >
+                  <RadioGroupItem value={m.value} id={m.value} className="sr-only" />
+                  <motion.div 
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full",
+                      isSelected ? "bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20" : "bg-slate-100 dark:bg-white/5"
+                    )}
+                    animate={isSelected ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Icon className={cn("h-6 w-6", isSelected ? m.color : "text-muted-foreground")} />
+                  </motion.div>
+                  <div>
+                    <p className="font-medium text-foreground">{m.label}</p>
+                    <p className="text-xs text-muted-foreground">{m.description}</p>
+                  </div>
+                </Label>
+              </motion.div>
             )
           })}
         </RadioGroup>

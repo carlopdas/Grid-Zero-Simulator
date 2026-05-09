@@ -298,6 +298,55 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
   }
+  
+  /* Enhanced Input Focus */
+  input:focus, select:focus, textarea:focus {
+    @apply ring-2 ring-blue-500/50;
+    transition: all 0.2s ease;
+  }
+  
+  /* Tab Hover Glow */
+  .glass-tab:hover:not([data-state="active"]) {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Animated Underline for tabs */
+  .tab-underline {
+    position: relative;
+  }
+  
+  .tab-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    transition: width 0.3s ease;
+  }
+  
+  .tab-underline:hover::after,
+  .tab-underline[data-state="active"]::after {
+    width: 100%;
+  }
+  
+  /* Section Container */
+  .section-container {
+    @apply rounded-2xl border border-slate-100 dark:border-white/10;
+  }
+  
+  /* Accent Bar */
+  .accent-bar {
+    height: 3px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 2px;
+  }
+  
+  /* Loading Pulse */
+  .loading-pulse {
+    animation: loadingPulse 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes fadeInUp {
@@ -326,5 +375,16 @@
   }
   50% {
     box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  }
+}
+
+@keyframes loadingPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.98);
   }
 }

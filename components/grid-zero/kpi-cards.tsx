@@ -1,7 +1,9 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { SimulationResults } from "@/lib/grid-zero-types"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { 
   Sun, 
   Zap, 
@@ -35,30 +37,40 @@ interface KPICardProps {
 
 function KPICard({ title, value, subtitle, icon, trend, colorClass = 'text-primary', bgClass = 'bg-primary/10' }: KPICardProps) {
   return (
-    <Card className="glass-card border-0 transition-all">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {title}
-            </p>
-            <p className="gradient-value kpi-value text-2xl font-bold tracking-tight">
-              {value}
-            </p>
-            {subtitle && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                {trend === 'up' && <ArrowUp className="h-3 w-3 text-emerald-400" />}
-                {trend === 'down' && <ArrowDown className="h-3 w-3 text-red-400" />}
-                {subtitle}
-              </div>
-            )}
+    <motion.div
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+    >
+      <Card className="glass-card border-0 transition-all hover:shadow-lg hover:shadow-blue-100 dark:hover:shadow-blue-900/20">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {title}
+              </p>
+              <p className="gradient-value kpi-value text-2xl font-bold tracking-tight">
+                {value}
+              </p>
+              {subtitle && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {trend === 'up' && <ArrowUp className="h-3 w-3 text-emerald-400" />}
+                  {trend === 'down' && <ArrowDown className="h-3 w-3 text-red-400" />}
+                  {subtitle}
+                </div>
+              )}
+            </div>
+            <motion.div 
+              className={cn("rounded-xl p-2.5", bgClass)}
+              whileHover={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className={colorClass}>{icon}</div>
+            </motion.div>
           </div>
-          <div className={cn("rounded-xl p-2.5", bgClass)}>
-            <div className={colorClass}>{icon}</div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 
