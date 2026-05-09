@@ -1,5 +1,5 @@
-import { GridZeroDashboard } from "@/components/grid-zero/dashboard"
+import { LandingPage } from "@/components/landing/landing-page"
 
 export default function Home() {
-  return <GridZeroDashboard />
+  return <LandingPage />
 }
