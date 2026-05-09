@@ -29,7 +29,7 @@ import {
   AnalysisMode,
   IrradianceData
 } from "@/lib/grid-zero-types"
-import { runGridZeroSimulation, generateSyntheticProfile, generateDefaultSolarProfile, generateSolarFromIrradiance } from "@/lib/simulation-engine"
+import { runGridZeroSimulation, generateSyntheticProfile, generateSolarFromIrradiance } from "@/lib/simulation-engine"
 import { 
   Zap, 
   Battery, 
@@ -185,22 +185,22 @@ export function GridZeroDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="glass-header sticky top-0 z-50 animate-fade-in-up">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <BatteryCharging className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] pulse-glow">
+              <BatteryCharging className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">BESS Sizing Platform</h1>
-              <p className="text-xs text-muted-foreground">Dimensionamento Técnico e Econômico</p>
+              <h1 className="text-lg font-bold tracking-tight text-white">BESS Sizing Platform</h1>
+              <p className="text-xs text-slate-400">Dimensionamento Tecnico e Economico</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              className="btn-gradient rounded-xl"
               size="sm"
               onClick={runSimulation}
               disabled={isSimulating}
@@ -216,46 +216,46 @@ export function GridZeroDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="consumption" className="space-y-6">
-          <ScrollArea className="w-full">
-            <TabsList className="inline-flex w-max gap-1 p-1">
-              <TabsTrigger value="consumption" className="gap-2 px-4">
+          <ScrollArea className="w-full animate-fade-in-up-delay-1">
+            <TabsList className="glass-card inline-flex w-max gap-1 p-1.5">
+              <TabsTrigger value="consumption" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <Zap className="h-4 w-4" />
                 <span className="hidden sm:inline">Consumo</span>
               </TabsTrigger>
-              <TabsTrigger value="battery" className="gap-2 px-4">
+              <TabsTrigger value="battery" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <Battery className="h-4 w-4" />
                 <span className="hidden sm:inline">Bateria</span>
               </TabsTrigger>
-              <TabsTrigger value="pv" className="gap-2 px-4">
+              <TabsTrigger value="pv" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <Sun className="h-4 w-4" />
                 <span className="hidden sm:inline">Fotovoltaico</span>
               </TabsTrigger>
-              <TabsTrigger value="tariff" className="gap-2 px-4">
+              <TabsTrigger value="tariff" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Tarifas</span>
               </TabsTrigger>
-              <TabsTrigger value="simulation" className="gap-2 px-4">
+              <TabsTrigger value="simulation" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <PlayCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Simulação</span>
+                <span className="hidden sm:inline">Simulacao</span>
               </TabsTrigger>
-              <TabsTrigger value="results" className="gap-2 px-4">
+              <TabsTrigger value="results" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Resultados</span>
               </TabsTrigger>
-              <TabsTrigger value="economic" className="gap-2 px-4">
+              <TabsTrigger value="economic" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Econômico</span>
+                <span className="hidden sm:inline">Economico</span>
               </TabsTrigger>
-              <TabsTrigger value="report" className="gap-2 px-4">
+              <TabsTrigger value="report" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
                 <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Relatório</span>
+                <span className="hidden sm:inline">Relatorio</span>
               </TabsTrigger>
             </TabsList>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
           {/* CONSUMPTION TAB */}
-          <TabsContent value="consumption" className="space-y-6">
+          <TabsContent value="consumption" className="space-y-6 animate-fade-in-up">
             <AnalysisModeSelector 
               mode={analysisMode} 
               onChange={setAnalysisMode} 
@@ -267,7 +267,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* BATTERY TAB */}
-          <TabsContent value="battery" className="space-y-6">
+          <TabsContent value="battery" className="space-y-6 animate-fade-in-up">
             <BatteryInputs 
               battery={battery} 
               onChange={setBattery} 
@@ -279,7 +279,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* PV TAB */}
-          <TabsContent value="pv" className="space-y-6">
+          <TabsContent value="pv" className="space-y-6 animate-fade-in-up">
             <GenerationInputs 
               generation={generation} 
               onChange={setGeneration} 
@@ -287,7 +287,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* TARIFF TAB */}
-          <TabsContent value="tariff" className="space-y-6">
+          <TabsContent value="tariff" className="space-y-6 animate-fade-in-up">
             <TariffInputs 
               tariff={tariff} 
               onChange={setTariff} 
@@ -295,7 +295,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* SIMULATION TAB */}
-          <TabsContent value="simulation" className="space-y-6">
+          <TabsContent value="simulation" className="space-y-6 animate-fade-in-up">
             <SimulationTab 
               data={results.hourlyData} 
               isRunning={isSimulating} 
@@ -303,7 +303,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* RESULTS TAB */}
-          <TabsContent value="results" className="space-y-6">
+          <TabsContent value="results" className="space-y-6 animate-fade-in-up">
             <KPICards 
               results={results} 
               batteryEnabled={battery.enabled}
@@ -326,7 +326,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* ECONOMIC TAB */}
-          <TabsContent value="economic" className="space-y-6">
+          <TabsContent value="economic" className="space-y-6 animate-fade-in-up">
             <EconomicAnalysis 
               results={results} 
               tariff={tariff} 
@@ -334,7 +334,7 @@ export function GridZeroDashboard() {
           </TabsContent>
 
           {/* REPORT TAB */}
-          <TabsContent value="report" className="space-y-6">
+          <TabsContent value="report" className="space-y-6 animate-fade-in-up">
             <ReportGenerator 
               results={results}
               consumption={consumption}
@@ -348,9 +348,9 @@ export function GridZeroDashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-4">
-        <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
-          BESS Sizing Platform • Dimensionamento técnico e econômico de sistemas de armazenamento
+      <footer className="border-t border-white/10 py-4 animate-fade-in-up">
+        <div className="container mx-auto px-4 text-center text-xs text-slate-500">
+          BESS Sizing Platform - Dimensionamento tecnico e economico de sistemas de armazenamento
         </div>
       </footer>
     </div>

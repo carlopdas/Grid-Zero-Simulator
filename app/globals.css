@@ -4,35 +4,41 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* BESS Platform Light Theme - Clean Corporate */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.25 0.03 250);
-  --card: oklch(0.98 0.002 250);
-  --card-foreground: oklch(0.25 0.03 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.03 250);
-  --primary: oklch(0.45 0.12 250);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.005 250);
-  --secondary-foreground: oklch(0.25 0.03 250);
-  --muted: oklch(0.95 0.005 250);
-  --muted-foreground: oklch(0.45 0.02 250);
-  --accent: oklch(0.96 0.005 250);
-  --accent-foreground: oklch(0.25 0.03 250);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.96 0.005 250);
-  --ring: oklch(0.45 0.12 250);
+  /* BESS Platform Dark Gradient Theme */
+  --background: #0f172a;
+  --background-end: #1e293b;
+  --foreground: #e2e8f0;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #e2e8f0;
+  --popover: rgba(30, 41, 59, 0.95);
+  --popover-foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-end: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.1);
+  --secondary-foreground: #e2e8f0;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #94a3b8;
+  --accent: rgba(59, 130, 246, 0.2);
+  --accent-foreground: #e2e8f0;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #3b82f6;
+  
+  /* Gradient text colors */
+  --gradient-start: #60a5fa;
+  --gradient-end: #a78bfa;
   
   /* Standardized Chart Colors */
-  --chart-load: oklch(0.5 0.15 250);
-  --chart-solar: oklch(0.7 0.18 85);
-  --chart-storage: oklch(0.55 0.18 145);
-  --chart-clipping: oklch(0.6 0.2 25);
-  --chart-import: oklch(0.6 0.02 250);
-  --chart-export: oklch(0.55 0.15 300);
-  --chart-soc: oklch(0.4 0.12 145);
+  --chart-load: #3b82f6;
+  --chart-solar: #f59e0b;
+  --chart-storage: #22c55e;
+  --chart-clipping: #ef4444;
+  --chart-import: #64748b;
+  --chart-export: #a855f7;
+  --chart-soc: #16a34a;
   
   --chart-1: var(--chart-load);
   --chart-2: var(--chart-solar);
@@ -40,60 +46,65 @@
   --chart-4: var(--chart-clipping);
   --chart-5: var(--chart-soc);
   
-  --radius: 0.5rem;
-  --sidebar: oklch(0.98 0.005 250);
-  --sidebar-foreground: oklch(0.25 0.03 250);
-  --sidebar-primary: oklch(0.45 0.12 250);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.005 250);
-  --sidebar-accent-foreground: oklch(0.25 0.03 250);
-  --sidebar-border: oklch(0.9 0.01 250);
-  --sidebar-ring: oklch(0.45 0.12 250);
+  --radius: 1.5rem;
+  --sidebar: rgba(15, 23, 42, 0.95);
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #3b82f6;
   
   /* Energy type colors */
-  --solar: oklch(0.7 0.18 85);
-  --solar-foreground: oklch(0.2 0.03 85);
-  --battery: oklch(0.55 0.18 145);
-  --battery-foreground: oklch(1 0 0);
-  --generator: oklch(0.6 0.2 25);
-  --generator-foreground: oklch(1 0 0);
-  --curtailed: oklch(0.6 0.2 25);
-  --curtailed-foreground: oklch(1 0 0);
-  --load: oklch(0.5 0.15 250);
-  --load-foreground: oklch(1 0 0);
-  --grid-import: oklch(0.6 0.02 250);
-  --grid-export: oklch(0.55 0.15 300);
+  --solar: #f59e0b;
+  --solar-foreground: #1e293b;
+  --battery: #22c55e;
+  --battery-foreground: #ffffff;
+  --generator: #ef4444;
+  --generator-foreground: #ffffff;
+  --curtailed: #ef4444;
+  --curtailed-foreground: #ffffff;
+  --load: #3b82f6;
+  --load-foreground: #ffffff;
+  --grid-import: #64748b;
+  --grid-export: #a855f7;
 }
 
 .dark {
-  --background: oklch(0.14 0.015 250);
-  --foreground: oklch(0.95 0.005 250);
-  --card: oklch(0.18 0.015 250);
-  --card-foreground: oklch(0.95 0.005 250);
-  --popover: oklch(0.18 0.015 250);
-  --popover-foreground: oklch(0.95 0.005 250);
-  --primary: oklch(0.6 0.15 250);
-  --primary-foreground: oklch(0.14 0.015 250);
-  --secondary: oklch(0.24 0.015 250);
-  --secondary-foreground: oklch(0.9 0.005 250);
-  --muted: oklch(0.22 0.015 250);
-  --muted-foreground: oklch(0.65 0.01 250);
-  --accent: oklch(0.24 0.015 250);
-  --accent-foreground: oklch(0.9 0.005 250);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.95 0.005 250);
-  --border: oklch(0.28 0.015 250);
-  --input: oklch(0.22 0.015 250);
-  --ring: oklch(0.6 0.15 250);
+  /* Same as root - this is a dark theme by default */
+  --background: #0f172a;
+  --background-end: #1e293b;
+  --foreground: #e2e8f0;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #e2e8f0;
+  --popover: rgba(30, 41, 59, 0.95);
+  --popover-foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-end: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.1);
+  --secondary-foreground: #e2e8f0;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #94a3b8;
+  --accent: rgba(59, 130, 246, 0.2);
+  --accent-foreground: #e2e8f0;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #3b82f6;
   
-  /* Standardized Chart Colors - Dark */
-  --chart-load: oklch(0.6 0.15 250);
-  --chart-solar: oklch(0.75 0.18 85);
-  --chart-storage: oklch(0.6 0.18 145);
-  --chart-clipping: oklch(0.65 0.2 25);
-  --chart-import: oklch(0.55 0.02 250);
-  --chart-export: oklch(0.6 0.15 300);
-  --chart-soc: oklch(0.5 0.12 145);
+  --gradient-start: #60a5fa;
+  --gradient-end: #a78bfa;
+  
+  --chart-load: #3b82f6;
+  --chart-solar: #f59e0b;
+  --chart-storage: #22c55e;
+  --chart-clipping: #ef4444;
+  --chart-import: #64748b;
+  --chart-export: #a855f7;
+  --chart-soc: #16a34a;
   
   --chart-1: var(--chart-load);
   --chart-2: var(--chart-solar);
@@ -101,28 +112,27 @@
   --chart-4: var(--chart-clipping);
   --chart-5: var(--chart-soc);
   
-  --sidebar: oklch(0.16 0.015 250);
-  --sidebar-foreground: oklch(0.95 0.005 250);
-  --sidebar-primary: oklch(0.6 0.15 250);
-  --sidebar-primary-foreground: oklch(0.14 0.015 250);
-  --sidebar-accent: oklch(0.22 0.015 250);
-  --sidebar-accent-foreground: oklch(0.9 0.005 250);
-  --sidebar-border: oklch(0.28 0.015 250);
-  --sidebar-ring: oklch(0.6 0.15 250);
+  --sidebar: rgba(15, 23, 42, 0.95);
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #3b82f6;
   
-  /* Energy type colors - Dark */
-  --solar: oklch(0.75 0.18 85);
-  --solar-foreground: oklch(0.14 0.015 250);
-  --battery: oklch(0.6 0.18 145);
-  --battery-foreground: oklch(0.95 0.005 250);
-  --generator: oklch(0.65 0.2 25);
-  --generator-foreground: oklch(0.95 0.005 250);
-  --curtailed: oklch(0.65 0.2 25);
-  --curtailed-foreground: oklch(0.95 0.005 250);
-  --load: oklch(0.6 0.15 250);
-  --load-foreground: oklch(0.95 0.005 250);
-  --grid-import: oklch(0.55 0.02 250);
-  --grid-export: oklch(0.6 0.15 300);
+  --solar: #f59e0b;
+  --solar-foreground: #1e293b;
+  --battery: #22c55e;
+  --battery-foreground: #ffffff;
+  --generator: #ef4444;
+  --generator-foreground: #ffffff;
+  --curtailed: #ef4444;
+  --curtailed-foreground: #ffffff;
+  --load: #3b82f6;
+  --load-foreground: #ffffff;
+  --grid-import: #64748b;
+  --grid-export: #a855f7;
 }
 
 @theme inline {
@@ -185,11 +195,187 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+  
+  html {
+    background: linear-gradient(135deg, var(--background) 0%, var(--background-end) 100%);
+    min-height: 100vh;
   }
+  
+  body {
+    @apply text-foreground;
+    background: transparent;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Card */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Gradient Button */
+  .btn-gradient {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-gradient:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+  }
+  
+  .btn-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Gradient Text for Numbers */
+  .gradient-value {
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* FadeInUp Animation */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  .animate-fade-in-up-delay-1 {
+    animation: fadeInUp 0.5s ease 0.1s forwards;
+    opacity: 0;
+  }
+  
+  .animate-fade-in-up-delay-2 {
+    animation: fadeInUp 0.5s ease 0.2s forwards;
+    opacity: 0;
+  }
+  
+  .animate-fade-in-up-delay-3 {
+    animation: fadeInUp 0.5s ease 0.3s forwards;
+    opacity: 0;
+  }
+  
+  .animate-fade-in-up-delay-4 {
+    animation: fadeInUp 0.5s ease 0.4s forwards;
+    opacity: 0;
+  }
+  
+  /* Pulse Glow Effect */
+  .pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  
+  /* Glass Header */
+  .glass-header {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Glass Input */
+  .glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Glass Tab */
+  .glass-tab {
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-tab[data-state="active"] {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  
+  /* KPI Value Animation */
+  .kpi-value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Staggered animation delays */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-7 { animation-delay: 0.35s; }
+  .stagger-8 { animation-delay: 0.4s; }
 }
