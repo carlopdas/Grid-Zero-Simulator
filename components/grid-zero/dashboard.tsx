@@ -188,7 +188,6 @@ export function GridZeroDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
-      
       {/* Header */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
