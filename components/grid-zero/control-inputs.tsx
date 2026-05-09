@@ -13,10 +13,12 @@ interface ControlInputsProps {
 
 export function ControlInputs({ windowClipping, onChange }: ControlInputsProps) {
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
+    <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <SlidersHorizontal className="h-5 w-5 text-primary" />
+        <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
+            <SlidersHorizontal className="h-4 w-4 text-blue-400" />
+          </div>
           Controle Operacional
           <TooltipProvider>
             <Tooltip>
@@ -33,7 +35,7 @@ export function ControlInputs({ windowClipping, onChange }: ControlInputsProps) 
             </Tooltip>
           </TooltipProvider>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-slate-400">
           Ajuste a limitação operacional do inversor
         </CardDescription>
       </CardHeader>
@@ -41,8 +43,8 @@ export function ControlInputs({ windowClipping, onChange }: ControlInputsProps) 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label>Window Clipping</Label>
-            <span className="rounded-md bg-primary/10 px-2 py-1 text-sm font-semibold text-primary">
-              {windowClipping}%
+            <span className="rounded-xl bg-gradient-to-r from-[#3b82f6]/20 to-[#8b5cf6]/20 px-3 py-1 text-sm font-semibold">
+              <span className="gradient-value">{windowClipping}%</span>
             </span>
           </div>
           <Slider
@@ -53,7 +55,7 @@ export function ControlInputs({ windowClipping, onChange }: ControlInputsProps) 
             step={1}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs text-slate-500">
             <span>0% (Máximo Clipping)</span>
             <span>100% (Sem Limitação)</span>
           </div>

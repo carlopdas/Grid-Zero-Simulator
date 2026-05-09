@@ -44,13 +44,15 @@ export function ComparisonChart({ results }: ComparisonChartProps) {
   ]
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
+    <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <GitCompare className="h-5 w-5 text-primary" />
+        <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
+            <GitCompare className="h-4 w-4 text-blue-400" />
+          </div>
           Comparativo de Cenários
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-slate-400">
           Original vs Grid Zero - energia potencialmente exportada vs aproveitada
         </CardDescription>
       </CardHeader>
@@ -109,18 +111,18 @@ export function ComparisonChart({ results }: ComparisonChartProps) {
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-4 grid grid-cols-3 gap-4 rounded-lg bg-muted/30 p-4">
+        <div className="mt-4 grid grid-cols-3 gap-4 rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Potencial Export</p>
-            <p className="text-lg font-semibold text-solar">{results.potentialExport.toFixed(1)} kWh</p>
+            <p className="text-xs text-slate-400">Potencial Export</p>
+            <p className="gradient-value text-lg font-semibold">{results.potentialExport.toFixed(1)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Aproveitada</p>
-            <p className="text-lg font-semibold text-primary">{results.effectivelyUsed.toFixed(1)} kWh</p>
+            <p className="text-xs text-slate-400">Aproveitada</p>
+            <p className="gradient-value text-lg font-semibold">{results.effectivelyUsed.toFixed(1)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Curtailed</p>
-            <p className="text-lg font-semibold text-destructive">{results.curtailedEnergy.toFixed(1)} kWh</p>
+            <p className="text-xs text-slate-400">Curtailed</p>
+            <p className="text-lg font-semibold text-red-400">{results.curtailedEnergy.toFixed(1)} kWh</p>
           </div>
         </div>
       </CardContent>

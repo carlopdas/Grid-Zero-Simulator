@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Grid Zero Simulator | Simulação Operacional FV',
-  description: 'Dashboard interativo para simulação operacional de sistemas fotovoltaicos em modo Grid Zero (zero exportação), com suporte a bateria e gerador.',
+  title: 'BESS Sizing Platform | Dimensionamento de Baterias',
+  description: 'Plataforma profissional para dimensionamento técnico e econômico de sistemas de armazenamento de energia (BESS), geração fotovoltaica e sistemas híbridos.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className="dark bg-background">
+    <html lang="pt-BR" className="bg-background">
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

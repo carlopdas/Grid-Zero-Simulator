@@ -2,110 +2,169 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HourlySimulationResult } from "@/lib/grid-zero-types"
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import { 
+  ComposedChart, 
+  Area, 
+  Line,
+  Bar,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  ResponsiveContainer, 
+  Tooltip, 
+  Legend,
+  Brush,
+  ReferenceLine
+} from "recharts"
 import { BarChart3 } from "lucide-react"
 
 interface EnergyChartProps {
   data: HourlySimulationResult[]
 }
 
+// Chart colors using CSS variables
+const COLORS = {
+  load: 'oklch(0.5 0.15 250)',
+  solar: 'oklch(0.7 0.18 85)',
+  storage: 'oklch(0.55 0.18 145)',
+  clipping: 'oklch(0.6 0.2 25)',
+  soc: 'oklch(0.4 0.12 145)',
+}
+
 export function EnergyChart({ data }: EnergyChartProps) {
   const chartData = data.map((d) => ({
     hora: `${d.hour.toString().padStart(2, '0')}:00`,
-    'Geração Original': d.originalGeneration,
-    'Geração Grid Zero': d.usefulGeneration,
     'Carga': d.load,
+    'Geração Solar': d.usefulGeneration,
+    'Geração Original': d.originalGeneration,
     'Curtailed': d.curtailed,
-    'Bateria': d.batteryDischarge,
-    'Gerador': d.generatorOutput,
+    'Bateria Descarga': d.batteryDischarge,
+    'Bateria Carga': -d.batteryCharge,
   }))
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <BarChart3 className="h-5 w-5 text-primary" />
+    <Card className="glass-card border-0 animate-fade-in-up">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
+            <BarChart3 className="h-4 w-4 text-blue-400" />
+          </div>
           Perfil Energético Diário
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-slate-400">
           Comparativo entre geração, consumo e perdas operacionais
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-80 w-full">
+        <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 30 }}>
               <defs>
-                <linearGradient id="colorOriginal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="oklch(0.7 0.15 45)" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="oklch(0.7 0.15 45)" stopOpacity={0}/>
+                <linearGradient id="gradLoad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.load} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={COLORS.load} stopOpacity={0.1}/>
                 </linearGradient>
-                <linearGradient id="colorGridZero" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="oklch(0.55 0.18 145)" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="oklch(0.55 0.18 145)" stopOpacity={0.1}/>
+                <linearGradient id="gradSolar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.solar} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={COLORS.solar} stopOpacity={0.1}/>
                 </linearGradient>
-                <linearGradient id="colorLoad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="oklch(0.5 0.15 260)" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="oklch(0.5 0.15 260)" stopOpacity={0.1}/>
+                <linearGradient id="gradStorage" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.storage} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={COLORS.storage} stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
               <XAxis 
                 dataKey="hora" 
                 tick={{ fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                className="text-muted-foreground"
+                className="fill-muted-foreground"
               />
               <YAxis 
                 tick={{ fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
                 unit=" kW"
-                className="text-muted-foreground"
+                className="fill-muted-foreground"
               />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: 'oklch(0.16 0.01 240)',
-                  border: '1px solid oklch(0.25 0.01 240)',
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  color: 'oklch(0.95 0.005 240)'
+                  color: 'var(--card-foreground)'
                 }}
-                labelStyle={{ color: 'oklch(0.95 0.005 240)', fontWeight: 600 }}
+                labelStyle={{ fontWeight: 600 }}
                 formatter={(value: number, name: string) => [
-                  `${value.toFixed(2)} kW`,
+                  `${Math.abs(value).toFixed(2)} kW`,
                   name
                 ]}
               />
               <Legend 
                 wrapperStyle={{ paddingTop: '20px' }}
+                onClick={() => {}}
               />
-              <Area
-                type="monotone"
-                dataKey="Geração Original"
-                stroke="oklch(0.7 0.15 45)"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                fillOpacity={1}
-                fill="url(#colorOriginal)"
-              />
-              <Area
-                type="monotone"
-                dataKey="Geração Grid Zero"
-                stroke="oklch(0.55 0.18 145)"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorGridZero)"
-              />
+              <ReferenceLine y={0} stroke="var(--border)" />
+              
+              {/* Load Area */}
               <Area
                 type="monotone"
                 dataKey="Carga"
-                stroke="oklch(0.5 0.15 260)"
+                stroke={COLORS.load}
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#colorLoad)"
+                fill="url(#gradLoad)"
               />
-            </AreaChart>
+              
+              {/* Solar Generation */}
+              <Area
+                type="monotone"
+                dataKey="Geração Solar"
+                stroke={COLORS.solar}
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradSolar)"
+              />
+              
+              {/* Original Generation (dashed line) */}
+              <Line
+                type="monotone"
+                dataKey="Geração Original"
+                stroke={COLORS.solar}
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                opacity={0.5}
+              />
+              
+              {/* Curtailed Energy */}
+              <Bar
+                dataKey="Curtailed"
+                fill={COLORS.clipping}
+                opacity={0.7}
+                barSize={8}
+              />
+              
+              {/* Battery Discharge */}
+              <Area
+                type="monotone"
+                dataKey="Bateria Descarga"
+                stroke={COLORS.storage}
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradStorage)"
+              />
+              
+              {/* Zoom/Brush */}
+              <Brush 
+                dataKey="hora" 
+                height={20} 
+                stroke="var(--primary)"
+                fill="var(--muted)"
+                travellerWidth={8}
+              />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
