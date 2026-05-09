@@ -98,16 +98,16 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
   }
 
   return (
-    <Card className="glass-card border-0 animate-fade-in-up">
+    <Card className="glass-card section-blue animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20">
-            <Zap className="h-4 w-4 text-blue-400" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100">
+            <Zap className="h-4 w-4 text-blue-600" />
           </div>
           Dados de Consumo
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Configure o perfil de consumo energético da instalação
+        <CardDescription className="text-sm text-gray-400">
+          Configure o perfil de consumo energetico da instalacao
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -180,18 +180,18 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
         </Tabs>
 
         {/* Summary */}
-        <div className="grid grid-cols-3 gap-4 rounded-2xl bg-secondary p-4 backdrop-blur-sm">
+        <div className="grid grid-cols-3 gap-4 rounded-xl bg-green-50 p-4">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Diário</p>
-            <p className="gradient-value text-lg font-semibold">{(consumption.dailyConsumption || 0).toFixed(1)} kWh</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Diario</p>
+            <p className="text-lg font-bold text-gray-900">{(consumption.dailyConsumption || 0).toFixed(1)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Semanal</p>
-            <p className="gradient-value text-lg font-semibold">{(consumption.weeklyConsumption || 0).toFixed(0)} kWh</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Semanal</p>
+            <p className="text-lg font-bold text-gray-900">{(consumption.weeklyConsumption || 0).toFixed(0)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Mensal</p>
-            <p className="gradient-value text-lg font-semibold">{(consumption.monthlyConsumption || 0).toFixed(0)} kWh</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Mensal</p>
+            <p className="text-lg font-bold text-gray-900">{(consumption.monthlyConsumption || 0).toFixed(0)} kWh</p>
           </div>
         </div>
 

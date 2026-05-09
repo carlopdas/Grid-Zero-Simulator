@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { ParticleBackground } from "@/components/ui/particle-background"
 import { FadeIn } from "@/components/ui/motion-wrapper"
 import { ConsumptionInputs } from "./consumption-inputs"
 import { GenerationInputs } from "./generation-inputs"
@@ -188,9 +187,7 @@ export function GridZeroDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* Particle Background */}
-      <ParticleBackground />
+    <div className="min-h-screen bg-[#F9FAFB]">
       
       {/* Header */}
       <motion.header 
@@ -202,15 +199,15 @@ export function GridZeroDashboard() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <motion.div 
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] pulse-glow"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <BatteryCharging className="h-5 w-5 text-white" />
+              <BatteryCharging className="h-5 w-5 text-green-600" />
             </motion.div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground">BESS Sizing Platform</h1>
-              <p className="text-xs text-muted-foreground">Dimensionamento Tecnico e Economico</p>
+              <h1 className="text-lg font-semibold text-gray-900">BESS Sizing Platform</h1>
+              <p className="text-sm text-gray-500 font-normal">Dimensionamento Tecnico e Economico</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -231,11 +228,11 @@ export function GridZeroDashboard() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 relative z-10">
+      <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="consumption" className="space-y-6">
           <FadeIn delay={0.1}>
             <ScrollArea className="w-full">
-              <TabsList className="glass-card inline-flex w-max gap-1 p-1.5">
+              <TabsList className="inline-flex w-max gap-1 p-1.5 bg-gray-100 rounded-xl">
               <TabsTrigger value="consumption" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <Zap className="h-4 w-4" />
                 <span className="hidden sm:inline">Consumo</span>
@@ -427,9 +424,9 @@ export function GridZeroDashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="border-t border-border py-4 relative z-10"
+        className="border-t border-gray-200 bg-white py-4"
       >
-        <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
+        <div className="container mx-auto px-4 text-center text-xs text-gray-500">
           BESS Sizing Platform - Dimensionamento tecnico e economico de sistemas de armazenamento
         </div>
       </motion.footer>

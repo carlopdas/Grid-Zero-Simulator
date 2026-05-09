@@ -39,15 +39,15 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
   ]
 
   return (
-    <Card className="glass-card border-0 animate-fade-in-up">
+    <Card className="glass-card section-green animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
-            <Settings2 className="h-4 w-4 text-blue-400" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-100">
+            <Settings2 className="h-4 w-4 text-green-600" />
           </div>
-          Modo de Análise
+          Modo de Analise
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
+        <CardDescription className="text-sm text-gray-400">
           Selecione o tipo de sistema a ser simulado
         </CardDescription>
       </CardHeader>
@@ -72,26 +72,26 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
                 <Label
                   htmlFor={m.value}
                   className={cn(
-                    "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-all backdrop-blur-sm h-full",
+                    "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 p-4 text-center transition-all h-full",
                     isSelected 
-                      ? "border-[#3b82f6]/50 bg-gradient-to-br from-[#3b82f6]/10 to-[#8b5cf6]/10 ring-2 ring-blue-500/30 shadow-lg shadow-blue-100 dark:shadow-blue-900/20" 
-                      : "border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-blue-400 hover:bg-white/80 dark:hover:bg-white/10"
+                      ? "border-green-500 bg-green-50 shadow-sm" 
+                      : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/50"
                   )}
                 >
                   <RadioGroupItem value={m.value} id={m.value} className="sr-only" />
                   <motion.div 
                     className={cn(
                       "flex h-12 w-12 items-center justify-center rounded-full",
-                      isSelected ? "bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20" : "bg-slate-100 dark:bg-white/5"
+                      isSelected ? "bg-green-100" : "bg-gray-100"
                     )}
                     animate={isSelected ? { scale: [1, 1.1, 1] } : {}}
                     transition={{ duration: 0.3 }}
                   >
-                    <Icon className={cn("h-6 w-6", isSelected ? m.color : "text-muted-foreground")} />
+                    <Icon className={cn("h-6 w-6", isSelected ? "text-green-600" : "text-gray-400")} />
                   </motion.div>
                   <div>
-                    <p className="font-medium text-foreground">{m.label}</p>
-                    <p className="text-xs text-muted-foreground">{m.description}</p>
+                    <p className="font-medium text-gray-700">{m.label}</p>
+                    <p className="text-xs text-gray-400">{m.description}</p>
                   </div>
                 </Label>
               </motion.div>
