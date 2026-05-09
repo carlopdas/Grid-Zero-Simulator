@@ -39,14 +39,14 @@ function KPICard({ title, value, subtitle, icon, trend, colorClass = 'text-prima
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {title}
             </p>
             <p className="gradient-value kpi-value text-2xl font-bold tracking-tight">
               {value}
             </p>
             {subtitle && (
-              <div className="flex items-center gap-1 text-xs text-slate-500">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {trend === 'up' && <ArrowUp className="h-3 w-3 text-emerald-400" />}
                 {trend === 'down' && <ArrowDown className="h-3 w-3 text-red-400" />}
                 {subtitle}

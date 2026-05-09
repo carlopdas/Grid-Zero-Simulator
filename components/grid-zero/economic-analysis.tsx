@@ -25,7 +25,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
     return (
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
               <TrendingUp className="h-4 w-4 text-blue-400" />
             </div>
@@ -34,11 +34,11 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertCircle className="mb-4 h-12 w-12 text-slate-500" />
-            <p className="text-lg font-medium text-slate-400">
+            <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-medium text-muted-foreground">
               Tarifas não configuradas
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               Configure as tarifas na aba correspondente para visualizar a análise econômica
             </p>
           </div>
@@ -67,7 +67,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                 <DollarSign className="h-5 w-5 text-emerald-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-400">Economia Mensal</p>
+                <p className="text-xs text-muted-foreground">Economia Mensal</p>
                 <p className="gradient-value text-xl font-bold">R$ {economic.monthlySavings.toFixed(0)}</p>
               </div>
             </div>
@@ -81,7 +81,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                 <Calendar className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-400">Economia Anual</p>
+                <p className="text-xs text-muted-foreground">Economia Anual</p>
                 <p className="gradient-value text-xl font-bold">R$ {economic.annualSavings.toFixed(0)}</p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                 <TrendingUp className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-400">Peak Shaving</p>
+                <p className="text-xs text-muted-foreground">Peak Shaving</p>
                 <p className="gradient-value text-xl font-bold">R$ {economic.peakShavingSavings.toFixed(0)}/mês</p>
               </div>
             </div>
@@ -109,7 +109,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                 <DollarSign className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-400">Energia Economizada</p>
+                <p className="text-xs text-muted-foreground">Energia Economizada</p>
                 <p className="gradient-value text-xl font-bold">{economic.gridEnergySaved.toFixed(1)} kWh/dia</p>
               </div>
             </div>
@@ -120,8 +120,8 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
       {/* Savings Chart */}
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg text-white">Projeção de Economia</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-lg text-foreground">Projeção de Economia</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Estimativa de economia em diferentes períodos
           </CardDescription>
         </CardHeader>
@@ -168,36 +168,36 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
       {/* Detailed Analysis */}
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg text-white">Detalhamento</CardTitle>
+          <CardTitle className="text-lg text-foreground">Detalhamento</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-slate-400">Geração Solar Útil</span>
-              <span className="font-medium text-white">{results.selfConsumption.toFixed(1)} kWh/dia</span>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Geração Solar Útil</span>
+              <span className="font-medium text-foreground">{results.selfConsumption.toFixed(1)} kWh/dia</span>
             </div>
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-slate-400">Energia da Bateria</span>
-              <span className="font-medium text-white">{results.dischargedEnergy.toFixed(1)} kWh/dia</span>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Energia da Bateria</span>
+              <span className="font-medium text-foreground">{results.dischargedEnergy.toFixed(1)} kWh/dia</span>
             </div>
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-slate-400">Tarifa Média Evitada</span>
-              <span className="font-medium text-white">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Tarifa Média Evitada</span>
+              <span className="font-medium text-foreground">
                 R$ {economic.gridEnergySaved > 0 
                   ? ((economic.monthlySavings / 30) / economic.gridEnergySaved).toFixed(2) 
                   : '0.00'}/kWh
               </span>
             </div>
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-slate-400">Economia por kWh Gerado</span>
-              <span className="font-medium text-white">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Economia por kWh Gerado</span>
+              <span className="font-medium text-foreground">
                 R$ {results.totalGenerated > 0 
                   ? ((economic.monthlySavings / 30) / results.totalGenerated).toFixed(2) 
                   : '0.00'}
               </span>
             </div>
             <div className="flex items-center justify-between pt-2">
-              <span className="font-semibold text-white">Total Economizado (Mensal)</span>
+              <span className="font-semibold text-foreground">Total Economizado (Mensal)</span>
               <span className="gradient-value text-xl font-bold">
                 R$ {economic.monthlySavings.toFixed(2)}
               </span>

@@ -38,13 +38,13 @@ export function BatteryChart({ data, minSoc }: BatteryChartProps) {
   return (
     <Card className="glass-card border-0 animate-fade-in-up-delay-1">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-white">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20">
             <Battery className="h-4 w-4 text-emerald-400" />
           </div>
           Estado de Carga da Bateria
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Evolução do SOC e fluxo de energia
         </CardDescription>
       </CardHeader>

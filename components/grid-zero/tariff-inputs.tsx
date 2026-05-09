@@ -21,7 +21,7 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
               <DollarSign className="h-4 w-4 text-blue-400" />
             </div>
@@ -32,7 +32,7 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
             onCheckedChange={handleToggle}
           />
         </div>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Configure as tarifas para análise econômica (opcional)
         </CardDescription>
       </CardHeader>
@@ -167,15 +167,15 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
           </div>
 
           {/* Summary */}
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
-            <p className="mb-2 text-sm font-medium text-slate-300">Resumo Tarifário</p>
+          <div className="rounded-2xl bg-secondary p-4 backdrop-blur-sm">
+            <p className="mb-2 text-sm font-medium text-foreground">Resumo Tarifário</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-slate-400">Ponta: </span>
-                <span className="font-medium text-white">{tariff.peakHours.start}h - {tariff.peakHours.end}h</span>
+                <span className="text-muted-foreground">Ponta: </span>
+                <span className="font-medium text-foreground">{tariff.peakHours.start}h - {tariff.peakHours.end}h</span>
               </div>
               <div>
-                <span className="text-slate-400">Diferença: </span>
+                <span className="text-muted-foreground">Diferença: </span>
                 <span className="gradient-value font-medium">
                   R$ {((tariff.peakRate || 0) - (tariff.offPeakRate || 0)).toFixed(2)}/kWh
                 </span>

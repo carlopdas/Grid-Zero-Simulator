@@ -153,13 +153,13 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
   return (
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-white">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
             <Sun className="h-4 w-4 text-amber-400" />
           </div>
           Dados Fotovoltaicos
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Configure a potência instalada e dados de irradiância
         </CardDescription>
       </CardHeader>
@@ -334,15 +334,15 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-4 rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
+        <div className="grid grid-cols-2 gap-4 rounded-2xl bg-secondary p-4 backdrop-blur-sm">
           <div className="text-center">
-            <p className="text-xs text-slate-400">Geração Diária</p>
+            <p className="text-xs text-muted-foreground">Geração Diária</p>
             <p className="gradient-value text-lg font-semibold">
               {generation.hourlyGeneration.reduce((a, b) => a + b, 0).toFixed(1)} kWh
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-slate-400">Geração Mensal</p>
+            <p className="text-xs text-muted-foreground">Geração Mensal</p>
             <p className="gradient-value text-lg font-semibold">
               {generation.monthlyAverage.toFixed(0)} kWh
             </p>

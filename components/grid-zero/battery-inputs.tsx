@@ -72,7 +72,7 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20">
               <Battery className="h-4 w-4 text-emerald-400" />
             </div>
@@ -83,7 +83,7 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
             onCheckedChange={handleToggle}
           />
         </div>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Upload do datasheet PDF ou preencha manualmente
         </CardDescription>
       </CardHeader>
@@ -289,12 +289,12 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
           </div>
 
           {/* Summary Card */}
-          <div className="rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
-            <p className="mb-2 text-sm font-medium text-slate-300">Capacidade Total do Sistema</p>
+          <div className="rounded-2xl bg-secondary p-4 backdrop-blur-sm">
+            <p className="mb-2 text-sm font-medium text-foreground">Capacidade Total do Sistema</p>
             <p className="gradient-value text-2xl font-bold">
               {((battery.capacity || 0) * (battery.quantity || 1)).toFixed(1)} kWh
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {battery.quantity || 1} x {battery.capacity || 0} kWh = {((battery.capacity || 0) * (battery.quantity || 1)).toFixed(1)} kWh total
             </p>
           </div>

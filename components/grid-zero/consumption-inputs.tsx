@@ -100,13 +100,13 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
   return (
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-white">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20">
             <Zap className="h-4 w-4 text-blue-400" />
           </div>
           Dados de Consumo
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Configure o perfil de consumo energético da instalação
         </CardDescription>
       </CardHeader>
@@ -180,17 +180,17 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
         </Tabs>
 
         {/* Summary */}
-        <div className="grid grid-cols-3 gap-4 rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
+        <div className="grid grid-cols-3 gap-4 rounded-2xl bg-secondary p-4 backdrop-blur-sm">
           <div className="text-center">
-            <p className="text-xs text-slate-400">Diário</p>
+            <p className="text-xs text-muted-foreground">Diário</p>
             <p className="gradient-value text-lg font-semibold">{(consumption.dailyConsumption || 0).toFixed(1)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-slate-400">Semanal</p>
+            <p className="text-xs text-muted-foreground">Semanal</p>
             <p className="gradient-value text-lg font-semibold">{(consumption.weeklyConsumption || 0).toFixed(0)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-slate-400">Mensal</p>
+            <p className="text-xs text-muted-foreground">Mensal</p>
             <p className="gradient-value text-lg font-semibold">{(consumption.monthlyConsumption || 0).toFixed(0)} kWh</p>
           </div>
         </div>

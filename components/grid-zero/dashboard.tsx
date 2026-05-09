@@ -194,8 +194,8 @@ export function GridZeroDashboard() {
               <BatteryCharging className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-white">BESS Sizing Platform</h1>
-              <p className="text-xs text-slate-400">Dimensionamento Tecnico e Economico</p>
+              <h1 className="text-lg font-bold tracking-tight text-foreground">BESS Sizing Platform</h1>
+              <p className="text-xs text-muted-foreground">Dimensionamento Tecnico e Economico</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -218,35 +218,35 @@ export function GridZeroDashboard() {
         <Tabs defaultValue="consumption" className="space-y-6">
           <ScrollArea className="w-full animate-fade-in-up-delay-1">
             <TabsList className="glass-card inline-flex w-max gap-1 p-1.5">
-              <TabsTrigger value="consumption" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="consumption" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <Zap className="h-4 w-4" />
                 <span className="hidden sm:inline">Consumo</span>
               </TabsTrigger>
-              <TabsTrigger value="battery" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="battery" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <Battery className="h-4 w-4" />
                 <span className="hidden sm:inline">Bateria</span>
               </TabsTrigger>
-              <TabsTrigger value="pv" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="pv" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <Sun className="h-4 w-4" />
                 <span className="hidden sm:inline">Fotovoltaico</span>
               </TabsTrigger>
-              <TabsTrigger value="tariff" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="tariff" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Tarifas</span>
               </TabsTrigger>
-              <TabsTrigger value="simulation" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="simulation" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <PlayCircle className="h-4 w-4" />
                 <span className="hidden sm:inline">Simulacao</span>
               </TabsTrigger>
-              <TabsTrigger value="results" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="results" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Resultados</span>
               </TabsTrigger>
-              <TabsTrigger value="economic" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="economic" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Economico</span>
               </TabsTrigger>
-              <TabsTrigger value="report" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-white">
+              <TabsTrigger value="report" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Relatorio</span>
               </TabsTrigger>
@@ -348,8 +348,8 @@ export function GridZeroDashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-4 animate-fade-in-up">
-        <div className="container mx-auto px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-border py-4 animate-fade-in-up">
+        <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
           BESS Sizing Platform - Dimensionamento tecnico e economico de sistemas de armazenamento
         </div>
       </footer>

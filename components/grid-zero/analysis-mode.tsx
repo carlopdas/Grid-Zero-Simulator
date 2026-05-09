@@ -40,13 +40,13 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
   return (
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-white">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
             <Settings2 className="h-4 w-4 text-blue-400" />
           </div>
           Modo de Análise
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Selecione o tipo de sistema a ser simulado
         </CardDescription>
       </CardHeader>
@@ -75,11 +75,11 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
                   "flex h-12 w-12 items-center justify-center rounded-full",
                   isSelected ? "bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20" : "bg-white/5"
                 )}>
-                  <Icon className={cn("h-6 w-6", isSelected ? m.color : "text-slate-500")} />
+                  <Icon className={cn("h-6 w-6", isSelected ? m.color : "text-muted-foreground")} />
                 </div>
                 <div>
-                  <p className="font-medium text-white">{m.label}</p>
-                  <p className="text-xs text-slate-400">{m.description}</p>
+                  <p className="font-medium text-foreground">{m.label}</p>
+                  <p className="text-xs text-muted-foreground">{m.description}</p>
                 </div>
               </Label>
             )

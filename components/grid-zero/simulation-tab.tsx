@@ -16,7 +16,7 @@ export function SimulationTab({ data, isRunning }: SimulationTabProps) {
   return (
     <Card className="glass-card border-0 animate-fade-in-up">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg text-white">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
             <Play className="h-4 w-4 text-blue-400" />
           </div>
@@ -27,7 +27,7 @@ export function SimulationTab({ data, isRunning }: SimulationTabProps) {
             </Badge>
           )}
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Resultados horários da simulação BESS
         </CardDescription>
       </CardHeader>
@@ -92,9 +92,9 @@ export function SimulationTab({ data, isRunning }: SimulationTabProps) {
           </Table>
         </ScrollArea>
         
-        <div className="mt-4 rounded-2xl bg-white/5 p-4 backdrop-blur-sm">
-          <h4 className="mb-2 text-sm font-medium text-slate-300">Legenda</h4>
-          <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+        <div className="mt-4 rounded-2xl bg-secondary p-4 backdrop-blur-sm">
+          <h4 className="mb-2 text-sm font-medium text-foreground">Legenda</h4>
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span><span className="inline-block w-3 h-3 rounded-full bg-amber-500 mr-1"></span>Geração Original (PVsyst)</span>
             <span><span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span>Geração Útil (Grid Zero)</span>
             <span><span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>Energia Curtailed</span>

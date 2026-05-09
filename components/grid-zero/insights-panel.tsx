@@ -29,13 +29,13 @@ function ConceptCard({ title, description, icon }: ConceptCardProps) {
   return (
     <Card className="glass-card border-0 transition-all">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base text-white">
+        <CardTitle className="flex items-center gap-2 text-base text-foreground">
           {icon}
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-slate-400 leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           {description}
         </p>
       </CardContent>
@@ -127,13 +127,13 @@ export function InsightsPanel({ results, batteryEnabled }: InsightsPanelProps) {
       {/* Dynamic Insights */}
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
               <Lightbulb className="h-4 w-4 text-amber-400" />
             </div>
             Observações Automáticas
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             Análises baseadas nos resultados da simulação
           </CardDescription>
         </CardHeader>
@@ -163,25 +163,25 @@ export function InsightsPanel({ results, batteryEnabled }: InsightsPanelProps) {
       {/* Technical Notes */}
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/20 to-slate-600/20">
-              <Info className="h-4 w-4 text-slate-400" />
+              <Info className="h-4 w-4 text-muted-foreground" />
             </div>
             Notas Técnicas
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-400">
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
-            <strong className="text-white">Estratégia de Bateria:</strong> Armazenar excedente solar durante períodos de alta geração e descarregar durante déficits, sempre respeitando limites de SOC configurados.
+            <strong className="text-foreground">Estratégia de Bateria:</strong> Armazenar excedente solar durante períodos de alta geração e descarregar durante déficits, sempre respeitando limites de SOC configurados.
           </p>
           <p>
-            <strong className="text-white">Lógica do Gerador:</strong> Acionado automaticamente quando geração FV + descarga de bateria são insuficientes para atender a carga.
+            <strong className="text-foreground">Lógica do Gerador:</strong> Acionado automaticamente quando geração FV + descarga de bateria são insuficientes para atender a carga.
           </p>
           <p>
-            <strong className="text-white">Garantia Grid Zero:</strong> A exportação para rede é sempre zero - qualquer excedente que não pode ser armazenado é curtailed (desperdiçado).
+            <strong className="text-foreground">Garantia Grid Zero:</strong> A exportação para rede é sempre zero - qualquer excedente que não pode ser armazenado é curtailed (desperdiçado).
           </p>
           <p>
-            <strong className="text-white">Window Clipping:</strong> Limitação percentual aplicada à geração máxima do inversor, simulando restrições operacionais ou despacho controlado.
+            <strong className="text-foreground">Window Clipping:</strong> Limitação percentual aplicada à geração máxima do inversor, simulando restrições operacionais ou despacho controlado.
           </p>
         </CardContent>
       </Card>

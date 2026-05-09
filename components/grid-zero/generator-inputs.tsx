@@ -21,7 +21,7 @@ export function GeneratorInputs({ generator, onChange }: GeneratorInputsProps) {
     <Card className="glass-card border-0 animate-fade-in-up-delay-1">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg text-white">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-orange-600/20">
               <Fuel className="h-4 w-4 text-red-400" />
             </div>
@@ -32,7 +32,7 @@ export function GeneratorInputs({ generator, onChange }: GeneratorInputsProps) {
             onCheckedChange={handleToggle}
           />
         </div>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-muted-foreground">
           Configure o gerador de emergência
         </CardDescription>
       </CardHeader>
@@ -50,7 +50,7 @@ export function GeneratorInputs({ generator, onChange }: GeneratorInputsProps) {
               placeholder="0.00"
             />
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             O gerador será acionado quando geração + bateria {"<"} carga
           </p>
         </CardContent>
