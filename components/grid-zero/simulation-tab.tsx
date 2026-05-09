@@ -14,12 +14,10 @@ interface SimulationTabProps {
 
 export function SimulationTab({ data, isRunning }: SimulationTabProps) {
   return (
-    <Card>
+    <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Play className="h-4 w-4 text-primary" />
-          </div>
+          <Play className="h-5 w-5 text-primary" />
           Simulação Temporal
           {isRunning && (
             <Badge variant="outline" className="ml-2 animate-pulse">
@@ -28,7 +26,7 @@ export function SimulationTab({ data, isRunning }: SimulationTabProps) {
           )}
         </CardTitle>
         <CardDescription>
-          Resultados horários da simulação BESS
+          Resultados horários da simulação Grid Zero
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -4,11 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { BatteryConfig, BatterySpec } from "@/lib/grid-zero-types"
-import { Battery, Upload, FileText, AlertCircle, Check } from "lucide-react"
-import { useRef, useState } from "react"
+import { BatteryConfig } from "@/lib/grid-zero-types"
+import { Battery } from "lucide-react"
 
 interface BatteryInputsProps {
   battery: BatteryConfig
@@ -16,67 +13,17 @@ interface BatteryInputsProps {
 }
 
 export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [parsing, setParsing] = useState(false)
-  const [parseError, setParseError] = useState<string | null>(null)
-
   const handleToggle = (enabled: boolean) => {
     onChange({ ...battery, enabled })
   }
 
-  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    
-    setParsing(true)
-    setParseError(null)
-    
-    // Simulate PDF parsing - in production, this would use a PDF parser library
-    // For now, we'll show the manual input fields
-    setTimeout(() => {
-      setParsing(false)
-      setParseError("Parser não encontrou dados automáticos. Preencha manualmente abaixo.")
-    }, 1500)
-  }
-
-  const updateSpecs = (field: keyof BatterySpec, value: string | number) => {
-    const currentSpecs = battery.specs || {
-      manufacturer: '',
-      model: '',
-      chemistry: '',
-      nominalEnergy: 0,
-      usableEnergy: 0,
-      nominalVoltage: 48,
-      voltageRange: { min: 44, max: 56 },
-      nominalChargeCurrent: 0,
-      maxChargeCurrent: 0,
-      nominalDischargeCurrent: 0,
-      maxContinuousDischargeCurrent: 0,
-      pulseDischargeCurrent: 0,
-      maxPower: 0,
-      efficiency: 95,
-      dod: 80,
-      cycles: 6000,
-      maxExpansion: 16,
-      communication: 'CAN/RS485',
-      operatingTemperature: { min: -10, max: 55 }
-    }
-    
-    onChange({
-      ...battery,
-      specs: { ...currentSpecs, [field]: value }
-    })
-  }
-
   return (
-    <Card>
-      <CardHeader className="pb-4">
+    <Card className="border-border/50 bg-card/50 backdrop-blur">
+      <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-battery/10">
-              <Battery className="h-4 w-4 text-battery" />
-            </div>
-            Dados da Bateria
+            <Battery className="h-5 w-5 text-battery" />
+            Sistema de Bateria
           </CardTitle>
           <Switch
             checked={battery.enabled}
@@ -84,86 +31,14 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
           />
         </div>
         <CardDescription>
-          Upload do datasheet PDF ou preencha manualmente
+          Configure o sistema de armazenamento de energia
         </CardDescription>
       </CardHeader>
-      
       {battery.enabled && (
-        <CardContent className="space-y-6">
-          {/* PDF Upload */}
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handlePdfUpload}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full"
-              disabled={parsing}
-            >
-              {parsing ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  Analisando PDF...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Upload Datasheet PDF
-                </>
-              )}
-            </Button>
-            
-            {parseError && (
-              <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm">
-                <AlertCircle className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{parseError}</span>
-              </div>
-            )}
-            
-            {battery.specs?.manufacturer && (
-              <div className="flex items-center gap-2 rounded-lg bg-battery/10 p-3">
-                <Check className="h-4 w-4 text-battery" />
-                <span className="text-sm font-medium">
-                  {battery.specs.manufacturer} - {battery.specs.model}
-                </span>
-                <Badge variant="secondary" className="ml-auto">
-                  {battery.specs.chemistry}
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          {/* Manufacturer & Model */}
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="manufacturer">Fabricante</Label>
-              <Input
-                id="manufacturer"
-                value={battery.specs?.manufacturer || ''}
-                onChange={(e) => updateSpecs('manufacturer', e.target.value)}
-                placeholder="Ex: BYD"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="model">Modelo</Label>
-              <Input
-                id="model"
-                value={battery.specs?.model || ''}
-                onChange={(e) => updateSpecs('model', e.target.value)}
-                placeholder="Ex: B-Box Premium"
-              />
-            </div>
-          </div>
-
-          {/* Energy */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacidade/Energia (kWh)</Label>
+              <Label htmlFor="capacity">Capacidade (kWh)</Label>
               <Input
                 id="capacity"
                 type="number"
@@ -175,21 +50,21 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantidade de Baterias</Label>
+              <Label htmlFor="efficiency">Eficiência (%)</Label>
               <Input
-                id="quantity"
+                id="efficiency"
                 type="number"
-                min={1}
-                step={1}
-                value={battery.quantity || 1}
-                onChange={(e) => onChange({ ...battery, quantity: parseInt(e.target.value) || 1 })}
-                placeholder="1"
+                min={0}
+                max={100}
+                step={0.1}
+                value={battery.efficiency || ''}
+                onChange={(e) => onChange({ ...battery, efficiency: parseFloat(e.target.value) || 0 })}
+                placeholder="90"
               />
             </div>
           </div>
           
-          {/* Power */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="chargePower">Potência de Carga (kW)</Label>
               <Input
@@ -216,38 +91,7 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
             </div>
           </div>
           
-          {/* Efficiency & DOD */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="efficiency">Eficiência (%)</Label>
-              <Input
-                id="efficiency"
-                type="number"
-                min={0}
-                max={100}
-                step={0.1}
-                value={battery.efficiency || ''}
-                onChange={(e) => onChange({ ...battery, efficiency: parseFloat(e.target.value) || 0 })}
-                placeholder="95"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dod">DOD - Profundidade de Descarga (%)</Label>
-              <Input
-                id="dod"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={battery.dod || ''}
-                onChange={(e) => onChange({ ...battery, dod: parseFloat(e.target.value) || 0 })}
-                placeholder="80"
-              />
-            </div>
-          </div>
-          
-          {/* SOC Limits */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="initialSoc">SOC Inicial (%)</Label>
               <Input
@@ -274,30 +118,6 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
                 placeholder="20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxSoc">SOC Máximo (%)</Label>
-              <Input
-                id="maxSoc"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={battery.maxSoc || 100}
-                onChange={(e) => onChange({ ...battery, maxSoc: parseFloat(e.target.value) || 100 })}
-                placeholder="100"
-              />
-            </div>
-          </div>
-
-          {/* Summary Card */}
-          <div className="rounded-lg bg-muted/50 p-4">
-            <p className="mb-2 text-sm font-medium">Capacidade Total do Sistema</p>
-            <p className="text-2xl font-bold text-battery">
-              {((battery.capacity || 0) * (battery.quantity || 1)).toFixed(1)} kWh
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {battery.quantity || 1} x {battery.capacity || 0} kWh = {((battery.capacity || 0) * (battery.quantity || 1)).toFixed(1)} kWh total
-            </p>
           </div>
         </CardContent>
       )}
