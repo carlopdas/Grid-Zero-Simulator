@@ -16,6 +16,17 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
   const hourlyData: HourlySimulationResult[] = []
   let currentSoc = battery.enabled ? battery.initialSoc : 0
   
+  // CRITICAL FIX: Calculate total battery capacity and power based on quantity
+  const batteryQuantity = battery.quantity || 1
+  const totalBatteryCapacity = battery.capacity * batteryQuantity // Total kWh
+  const totalChargePower = battery.chargePower * batteryQuantity // Total kW charge
+  const totalDischargePower = battery.dischargePower * batteryQuantity // Total kW discharge
+  const batteryDod = battery.dod || 80
+  const batteryEfficiency = battery.efficiency || 90
+  
+  // Usable capacity considering DOD
+  const usableCapacity = totalBatteryCapacity * (batteryDod / 100)
+  
   let totalGenerated = 0
   let totalConsumed = 0
   let totalCurtailed = 0
@@ -66,16 +77,30 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
       // Try to store excess in battery
       if (battery.enabled && excess > 0 && analysisMode === 'pv-bess') {
         const maxSocLimit = battery.maxSoc || 100
-        const availableCapacity = (battery.capacity * (maxSocLimit - currentSoc) / 100)
-        const maxCharge = Math.min(
-          excess,
-          battery.chargePower,
-          availableCapacity / (battery.efficiency / 100)
+        const minSocLimit = battery.minSoc || (100 - batteryDod)
+        
+        // Available capacity in kWh = total capacity * (maxSoc - currentSoc) / 100
+        const availableCapacityKwh = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
+        
+        // Max energy that can be charged this hour considering:
+        // 1. Excess energy available
+        // 2. Charge power limit (kW = kWh per hour)
+        // 3. Available capacity in battery (accounting for efficiency losses)
+        const maxChargeEnergy = Math.min(
+          excess,                                    // Available excess
+          totalChargePower,                          // Power limit (kW = kWh/h)
+          availableCapacityKwh / (batteryEfficiency / 100)  // Capacity limit (input energy needed)
         )
-        batteryCharge = maxCharge * (battery.efficiency / 100)
-        currentSoc += (batteryCharge / battery.capacity) * 100
+        
+        // Energy actually stored (after efficiency losses)
+        batteryCharge = maxChargeEnergy * (batteryEfficiency / 100)
+        
+        // Update SOC
+        currentSoc += (batteryCharge / totalBatteryCapacity) * 100
         currentSoc = Math.min(currentSoc, maxSocLimit)
-        excess -= maxCharge
+        
+        // Subtract charged energy from excess
+        excess -= maxChargeEnergy
         totalStored += batteryCharge
       }
       
@@ -91,14 +116,21 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
       
       // Try to discharge battery (prioritize during peak hours)
       if (battery.enabled && remaining > 0 && currentSoc > battery.minSoc && analysisMode === 'pv-bess') {
-        const availableEnergy = battery.capacity * (currentSoc - battery.minSoc) / 100
-        const maxDischarge = Math.min(
+        // Available energy in kWh = total capacity * (currentSoc - minSoc) / 100
+        const availableEnergyKwh = totalBatteryCapacity * (currentSoc - battery.minSoc) / 100
+        
+        // Max discharge considering:
+        // 1. Remaining load to cover
+        // 2. Discharge power limit
+        // 3. Available energy in battery
+        const maxDischargeEnergy = Math.min(
           remaining,
-          battery.dischargePower,
-          availableEnergy
+          totalDischargePower,
+          availableEnergyKwh
         )
-        batteryDischarge = maxDischarge
-        currentSoc -= (batteryDischarge / battery.capacity) * 100
+        
+        batteryDischarge = maxDischargeEnergy
+        currentSoc -= (batteryDischarge / totalBatteryCapacity) * 100
         currentSoc = Math.max(currentSoc, battery.minSoc)
         remaining -= batteryDischarge
         totalDischarged += batteryDischarge

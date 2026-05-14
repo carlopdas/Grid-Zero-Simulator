@@ -16,11 +16,14 @@ import { EnergyChart } from "./energy-chart"
 import { BatteryChart } from "./battery-chart"
 import { KPICards } from "./kpi-cards"
 import { ComparisonChart } from "./comparison-chart"
+import { MonthlyChart } from "./monthly-chart"
 import { InsightsPanel } from "./insights-panel"
 import { SimulationTab } from "./simulation-tab"
 import { EconomicAnalysis } from "./economic-analysis"
 import { ReportGenerator } from "./report-generator"
 import { ThemeToggle } from "./theme-toggle"
+import { ProjectManager } from "./project-manager"
+import { Project } from "@/lib/project-storage"
 import { 
   ConsumptionProfile, 
   GenerationData, 
@@ -57,7 +60,8 @@ const defaultConsumption: ConsumptionProfile = {
   weeklyConsumption: 700,
   monthlyConsumption: 3000,
   annualConsumption: 36500,
-  hourlyProfile: generateSyntheticProfile('comercial', 100)
+  hourlyProfile: generateSyntheticProfile('comercial', 100),
+  monthlyProfile: Array(12).fill(3000) // Default 3000 kWh per month
 }
 
 const defaultGeneration: GenerationData = {
@@ -138,6 +142,8 @@ const emptyResults: SimulationResults = {
 }
 
 export function GridZeroDashboard() {
+  const [projectName, setProjectName] = useState('')
+  const [projectId, setProjectId] = useState<string | null>(null)
   const [consumption, setConsumption] = useState<ConsumptionProfile>(defaultConsumption)
   const [generation, setGeneration] = useState<GenerationData>(defaultGeneration)
   const [windowClipping, setWindowClipping] = useState(100)
@@ -147,6 +153,31 @@ export function GridZeroDashboard() {
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('pv-bess')
   const [results, setResults] = useState<SimulationResults>(emptyResults)
   const [isSimulating, setIsSimulating] = useState(false)
+
+  const handleProjectLoad = (project: Project) => {
+    setProjectId(project.id)
+    setProjectName(project.name)
+    setConsumption(project.consumption)
+    setGeneration(project.generation)
+    setBattery(project.battery)
+    setGenerator(project.generator)
+    setTariff(project.tariff)
+    setAnalysisMode(project.analysisMode)
+    setWindowClipping(project.windowClipping)
+  }
+
+  const handleNewProject = () => {
+    setProjectId(null)
+    setProjectName('')
+    setConsumption(defaultConsumption)
+    setGeneration(defaultGeneration)
+    setBattery(defaultBattery)
+    setGenerator(defaultGenerator)
+    setTariff(defaultTariff)
+    setAnalysisMode('pv-bess')
+    setWindowClipping(100)
+    setResults(emptyResults)
+  }
 
   const runSimulation = useCallback(() => {
     setIsSimulating(true)
@@ -187,7 +218,7 @@ export function GridZeroDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
@@ -198,18 +229,32 @@ export function GridZeroDashboard() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <motion.div 
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <BatteryCharging className="h-5 w-5 text-green-600" />
+              <BatteryCharging className="h-5 w-5 text-green-600 dark:text-green-400" />
             </motion.div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">BESS Sizing Platform</h1>
-              <p className="text-sm text-gray-500 font-normal">Dimensionamento Tecnico e Economico</p>
+              <h1 className="text-lg font-semibold text-foreground">Grid-Zero Sizing Platform</h1>
+              <p className="text-sm text-muted-foreground font-normal">Dimensionamento Tecnico e Economico</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ProjectManager
+              projectName={projectName}
+              projectId={projectId}
+              onProjectNameChange={setProjectName}
+              onProjectLoad={handleProjectLoad}
+              onNewProject={handleNewProject}
+              consumption={consumption}
+              generation={generation}
+              battery={battery}
+              generator={generator}
+              tariff={tariff}
+              analysisMode={analysisMode}
+              windowClipping={windowClipping}
+            />
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 className={`btn-gradient rounded-xl transition-all ${isSimulating ? 'animate-pulse' : ''}`}
@@ -231,7 +276,7 @@ export function GridZeroDashboard() {
         <Tabs defaultValue="consumption" className="space-y-6">
           <FadeIn delay={0.1}>
             <ScrollArea className="w-full">
-              <TabsList className="inline-flex w-max gap-1 p-1.5 bg-gray-100 rounded-xl">
+              <TabsList className="inline-flex w-max gap-1 p-1.5 bg-secondary rounded-xl">
               <TabsTrigger value="consumption" className="glass-tab gap-2 rounded-xl px-4 data-[state=active]:text-foreground">
                 <Zap className="h-4 w-4" />
                 <span className="hidden sm:inline">Consumo</span>
@@ -375,6 +420,10 @@ export function GridZeroDashboard() {
                 )}
               </div>
               <ComparisonChart results={results} />
+              <MonthlyChart 
+                results={results} 
+                monthlyConsumption={consumption.monthlyProfile}
+              />
               <InsightsPanel 
                 results={results} 
                 batteryEnabled={battery.enabled} 
@@ -423,10 +472,10 @@ export function GridZeroDashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="border-t border-gray-200 bg-white py-4"
+        className="border-t border-border bg-card py-4"
       >
-        <div className="container mx-auto px-4 text-center text-xs text-gray-500">
-          BESS Sizing Platform - Dimensionamento tecnico e economico de sistemas de armazenamento
+        <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
+          Grid-Zero Sizing Platform - Dimensionamento tecnico e economico de sistemas de armazenamento
         </div>
       </motion.footer>
     </div>

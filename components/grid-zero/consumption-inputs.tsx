@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConsumptionProfile } from "@/lib/grid-zero-types"
-import { Upload, Zap, Calculator } from "lucide-react"
+import { Upload, Zap, Calculator, Calendar } from "lucide-react"
+import { MONTH_NAMES } from "@/lib/grid-zero-types"
 import { useRef } from "react"
 import Papa from "papaparse"
 
@@ -19,14 +20,55 @@ interface ConsumptionInputsProps {
 export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleModeChange = (mode: 'daily' | 'hourly') => {
+  const handleModeChange = (mode: 'daily' | 'hourly' | 'monthly' | 'monthly-detailed') => {
     if (mode === 'daily') {
       // When switching to daily mode, distribute evenly
       const newHourly = Array(24).fill(consumption.dailyConsumption / 24)
       onChange({ ...consumption, mode, hourlyProfile: newHourly })
+    } else if (mode === 'monthly') {
+      // Single monthly value
+      onChange({ ...consumption, mode })
+    } else if (mode === 'monthly-detailed') {
+      // 12 monthly values
+      const monthlyProfile = consumption.monthlyProfile || Array(12).fill(consumption.monthlyConsumption || 3000)
+      onChange({ ...consumption, mode, monthlyProfile })
     } else {
       onChange({ ...consumption, mode })
     }
+  }
+
+  const handleMonthlyChange = (value: number) => {
+    const daily = value / 30
+    const monthlyProfile = Array(12).fill(value)
+    onChange({
+      ...consumption,
+      monthlyConsumption: value,
+      dailyConsumption: daily,
+      weeklyConsumption: daily * 7,
+      annualConsumption: value * 12,
+      hourlyProfile: Array(24).fill(daily / 24),
+      monthlyProfile
+    })
+  }
+
+  const handleMonthChange = (month: number, value: number) => {
+    const newMonthly = [...(consumption.monthlyProfile || Array(12).fill(3000))]
+    newMonthly[month] = value
+    
+    const annual = newMonthly.reduce((sum, val) => sum + val, 0)
+    const avgMonthly = annual / 12
+    const daily = avgMonthly / 30
+    
+    onChange({
+      ...consumption,
+      mode: 'monthly-detailed',
+      monthlyProfile: newMonthly,
+      monthlyConsumption: avgMonthly,
+      dailyConsumption: daily,
+      weeklyConsumption: daily * 7,
+      annualConsumption: annual,
+      hourlyProfile: Array(24).fill(daily / 24)
+    })
   }
 
   const handleTypeChange = (type: 'comercial' | 'industrial' | 'residencial' | 'personalizado') => {
@@ -100,26 +142,34 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
   return (
     <Card className="glass-card section-blue animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100">
-            <Zap className="h-4 w-4 text-blue-600" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+            <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           Dados de Consumo
         </CardTitle>
-        <CardDescription className="text-sm text-gray-400">
+        <CardDescription className="text-sm text-muted-foreground">
           Configure o perfil de consumo energetico da instalacao
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs value={consumption.mode} onValueChange={(v) => handleModeChange(v as 'daily' | 'hourly')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="daily" className="gap-2">
-              <Calculator className="h-4 w-4" />
-              Consumo Diário
+        <Tabs value={consumption.mode} onValueChange={(v) => handleModeChange(v as 'daily' | 'hourly' | 'monthly' | 'monthly-detailed')}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="daily" className="gap-1 text-xs sm:text-sm">
+              <Calculator className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Diario</span>
             </TabsTrigger>
-            <TabsTrigger value="hourly" className="gap-2">
-              <Zap className="h-4 w-4" />
-              Consumo Horário
+            <TabsTrigger value="hourly" className="gap-1 text-xs sm:text-sm">
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Horario</span>
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="gap-1 text-xs sm:text-sm">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Mensal</span>
+            </TabsTrigger>
+            <TabsTrigger value="monthly-detailed" className="gap-1 text-xs sm:text-sm">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">12 Meses</span>
             </TabsTrigger>
           </TabsList>
           
@@ -177,21 +227,91 @@ export function ConsumptionInputs({ consumption, onChange }: ConsumptionInputsPr
               ))}
             </div>
           </TabsContent>
+          
+          <TabsContent value="monthly" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Perfil de Carga</Label>
+              <Select value={consumption.type} onValueChange={handleTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o perfil" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="comercial">Comercial</SelectItem>
+                  <SelectItem value="industrial">Industrial</SelectItem>
+                  <SelectItem value="residencial">Residencial</SelectItem>
+                  <SelectItem value="personalizado">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="monthlyTotal">Consumo Mensal Total (kWh/mes)</Label>
+              <Input
+                id="monthlyTotal"
+                type="number"
+                min={0}
+                step={1}
+                value={consumption.monthlyConsumption || ''}
+                onChange={(e) => handleMonthlyChange(parseFloat(e.target.value) || 0)}
+                placeholder="Ex: 3000"
+                className="text-lg font-medium"
+              />
+              <p className="text-xs text-muted-foreground">
+                O consumo diario sera calculado automaticamente (mensal / 30)
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="monthly-detailed" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Consumo por Mes (kWh)</Label>
+              <p className="text-xs text-muted-foreground">
+                Insira o consumo de cada mes para uma analise mais precisa
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {MONTH_NAMES.map((month, index) => (
+                <div key={month} className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    {month}
+                  </Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={(consumption.monthlyProfile?.[index]) || ''}
+                    onChange={(e) => handleMonthChange(index, parseFloat(e.target.value) || 0)}
+                    className="h-9 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3 text-sm">
+              <p className="font-medium text-foreground">
+                Consumo Anual Total: {((consumption.monthlyProfile || []).reduce((a, b) => a + b, 0)).toLocaleString()} kWh
+              </p>
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Summary */}
-        <div className="grid grid-cols-3 gap-4 rounded-xl bg-green-50 p-4">
+        <div className="grid grid-cols-4 gap-3 rounded-xl bg-green-50 dark:bg-green-900/20 p-4">
           <div className="text-center">
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Diario</p>
-            <p className="text-lg font-bold text-gray-900">{(consumption.dailyConsumption || 0).toFixed(1)} kWh</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Diario</p>
+            <p className="text-lg font-bold text-foreground">{(consumption.dailyConsumption || 0).toFixed(1)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Semanal</p>
-            <p className="text-lg font-bold text-gray-900">{(consumption.weeklyConsumption || 0).toFixed(0)} kWh</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Semanal</p>
+            <p className="text-lg font-bold text-foreground">{(consumption.weeklyConsumption || 0).toFixed(0)} kWh</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Mensal</p>
-            <p className="text-lg font-bold text-gray-900">{(consumption.monthlyConsumption || 0).toFixed(0)} kWh</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Mensal</p>
+            <p className="text-lg font-bold text-foreground">{(consumption.monthlyConsumption || 0).toFixed(0)} kWh</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Anual</p>
+            <p className="text-lg font-bold text-foreground">{((consumption.annualConsumption || 0) / 1000).toFixed(1)} MWh</p>
           </div>
         </div>
 

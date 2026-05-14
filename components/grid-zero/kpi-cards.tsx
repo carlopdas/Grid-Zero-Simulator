@@ -35,25 +35,25 @@ interface KPICardProps {
   bgClass?: string
 }
 
-function KPICard({ title, value, subtitle, icon, trend, colorClass = 'text-green-600', bgClass = 'bg-green-100' }: KPICardProps) {
+function KPICard({ title, value, subtitle, icon, trend, colorClass = 'text-green-600 dark:text-green-400', bgClass = 'bg-green-100 dark:bg-green-900/30' }: KPICardProps) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      <Card className="bg-green-50 border border-green-100 rounded-xl transition-all hover:shadow-md">
+      <Card className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-xl transition-all hover:shadow-md">
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
                 {title}
               </p>
-              <p className="text-2xl font-bold text-gray-900 tracking-tight">
+              <p className="text-2xl font-bold text-foreground tracking-tight">
                 {value}
               </p>
               {subtitle && (
-                <div className="flex items-center gap-1 text-xs text-gray-400">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   {trend === 'up' && <ArrowUp className="h-3 w-3 text-green-500" />}
                   {trend === 'down' && <ArrowDown className="h-3 w-3 text-red-400" />}
                   {subtitle}

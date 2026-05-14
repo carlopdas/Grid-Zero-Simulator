@@ -1,11 +1,12 @@
 export interface ConsumptionProfile {
-  mode: 'daily' | 'hourly'
+  mode: 'daily' | 'hourly' | 'monthly' | 'monthly-detailed'
   type: 'comercial' | 'industrial' | 'residencial' | 'personalizado'
   dailyConsumption: number
   weeklyConsumption: number
   monthlyConsumption: number
   annualConsumption: number
   hourlyProfile: number[]
+  monthlyProfile: number[] // 12 values, one per month
 }
 
 export interface IrradianceData {

@@ -41,13 +41,13 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
   return (
     <Card className="glass-card section-green animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-100">
-            <Settings2 className="h-4 w-4 text-green-600" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30">
+            <Settings2 className="h-4 w-4 text-green-600 dark:text-green-400" />
           </div>
           Modo de Analise
         </CardTitle>
-        <CardDescription className="text-sm text-gray-400">
+        <CardDescription className="text-sm text-muted-foreground">
           Selecione o tipo de sistema a ser simulado
         </CardDescription>
       </CardHeader>
@@ -74,24 +74,24 @@ export function AnalysisModeSelector({ mode, onChange }: AnalysisModeProps) {
                   className={cn(
                     "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 p-4 text-center transition-all h-full",
                     isSelected 
-                      ? "border-green-500 bg-green-50 shadow-sm" 
-                      : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/50"
+                      ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-sm" 
+                      : "border-border bg-card hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50/50 dark:hover:bg-green-900/10"
                   )}
                 >
                   <RadioGroupItem value={m.value} id={m.value} className="sr-only" />
                   <motion.div 
                     className={cn(
                       "flex h-12 w-12 items-center justify-center rounded-full",
-                      isSelected ? "bg-green-100" : "bg-gray-100"
+                      isSelected ? "bg-green-100 dark:bg-green-900/30" : "bg-secondary"
                     )}
                     animate={isSelected ? { scale: [1, 1.1, 1] } : {}}
                     transition={{ duration: 0.3 }}
                   >
-                    <Icon className={cn("h-6 w-6", isSelected ? "text-green-600" : "text-gray-400")} />
+                    <Icon className={cn("h-6 w-6", isSelected ? "text-green-600 dark:text-green-400" : "text-muted-foreground")} />
                   </motion.div>
                   <div>
-                    <p className="font-medium text-gray-700">{m.label}</p>
-                    <p className="text-xs text-gray-400">{m.description}</p>
+                    <p className="font-medium text-foreground">{m.label}</p>
+                    <p className="text-xs text-muted-foreground">{m.description}</p>
                   </div>
                 </Label>
               </motion.div>

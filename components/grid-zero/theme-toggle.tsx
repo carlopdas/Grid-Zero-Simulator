@@ -2,30 +2,31 @@
 
 import { Button } from "@/components/ui/button"
 import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null
-    const preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    setTheme(preferred)
-    document.documentElement.classList.toggle('dark', preferred === 'dark')
+    setMounted(true)
   }, [])
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Sun className="h-4 w-4" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
   }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleTheme}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className="h-9 w-9"
     >
       {theme === 'dark' ? (

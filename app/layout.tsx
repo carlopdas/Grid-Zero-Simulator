@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 const inter = Inter({ 
@@ -9,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'BESS Sizing Platform | Dimensionamento de Baterias',
-  description: 'Plataforma profissional para dimensionamento técnico e econômico de sistemas de armazenamento de energia (BESS), geração fotovoltaica e sistemas híbridos.',
+  title: 'Grid-Zero Sizing Platform | Dimensionamento de Baterias',
+  description: 'Plataforma profissional para dimensionamento tecnico e economico de sistemas de armazenamento de energia (BESS), geracao fotovoltaica e sistemas hibridos.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -37,9 +39,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} bg-background`}>
-      <body className="font-sans antialiased bg-[#F9FAFB]">
-        {children}
+    <html lang="pt-BR" className={`${inter.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

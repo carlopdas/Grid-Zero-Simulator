@@ -13,7 +13,8 @@ import {
   Legend,
   Cell
 } from "recharts"
-import { TrendingUp, DollarSign, Calendar, AlertCircle } from "lucide-react"
+import { TrendingUp, DollarSign, Calendar, AlertCircle, Info, Zap, Battery } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface EconomicAnalysisProps {
   results: SimulationResults
@@ -23,23 +24,23 @@ interface EconomicAnalysisProps {
 export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
   if (!tariff.enabled) {
     return (
-      <Card className="glass-card border-0 animate-fade-in-up">
+      <Card className="glass-card section-blue animate-fade-in-up">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
-              <TrendingUp className="h-4 w-4 text-blue-400" />
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+              <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
-            Análise Econômica
+            Analise Economica
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="text-lg font-medium text-muted-foreground">
-              Tarifas não configuradas
+            <p className="text-lg font-medium text-foreground">
+              Tarifas nao configuradas
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Configure as tarifas na aba correspondente para visualizar a análise econômica
+              Configure as tarifas na aba correspondente para visualizar a analise economica
             </p>
           </div>
         </CardContent>
@@ -58,59 +59,99 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
+      {/* KPI Cards with Explanatory Tooltips */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card className="glass-card border-0 animate-fade-in-up">
+        <Card className="glass-card section-green animate-fade-in-up">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20">
-                <DollarSign className="h-5 w-5 text-emerald-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30">
+                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Economia Mensal</p>
-                <p className="gradient-value text-xl font-bold">R$ {economic.monthlySavings.toFixed(0)}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Economia Mensal</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Valor economizado na conta de luz no mes, comparando cenario com bateria vs sem bateria. Calculado com base nas tarifas configuradas.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xl font-bold text-foreground">R$ {economic.monthlySavings.toFixed(0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-0 animate-fade-in-up-delay-1">
+        <Card className="glass-card section-green animate-fade-in-up-delay-1">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20">
-                <Calendar className="h-5 w-5 text-amber-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Economia Anual</p>
-                <p className="gradient-value text-xl font-bold">R$ {economic.annualSavings.toFixed(0)}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Economia Anual</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Soma das economias mensais em 12 meses. Representa o total economizado anualmente com o sistema solar + bateria.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xl font-bold text-foreground">R$ {economic.annualSavings.toFixed(0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-0 animate-fade-in-up-delay-2">
+        <Card className="glass-card section-blue animate-fade-in-up-delay-2">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
-                <TrendingUp className="h-5 w-5 text-blue-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Peak Shaving</p>
-                <p className="gradient-value text-xl font-bold">R$ {economic.peakShavingSavings.toFixed(0)}/mês</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Peak Shaving</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Reducao dos picos de demanda da rede, evitando custos extras por alta potencia contratada. A bateria descarrega nos horarios de pico.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xl font-bold text-foreground">R$ {economic.peakShavingSavings.toFixed(0)}/mes</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-0 animate-fade-in-up-delay-3">
+        <Card className="glass-card section-blue animate-fade-in-up-delay-3">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20">
-                <DollarSign className="h-5 w-5 text-blue-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+                <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Energia Economizada</p>
-                <p className="gradient-value text-xl font-bold">{economic.gridEnergySaved.toFixed(1)} kWh/dia</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Energia Economizada</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Total de kWh que deixaram de ser importados da rede gracas a bateria + geracao solar. Energia produzida e consumida localmente.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xl font-bold text-foreground">{economic.gridEnergySaved.toFixed(1)} kWh/dia</p>
               </div>
             </div>
           </CardContent>

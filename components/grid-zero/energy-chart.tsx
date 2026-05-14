@@ -43,16 +43,16 @@ export function EnergyChart({ data }: EnergyChartProps) {
   }))
 
   return (
-    <Card className="glass-card border-0 animate-fade-in-up">
+    <Card className="glass-card section-blue animate-fade-in-up">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20">
-            <BarChart3 className="h-4 w-4 text-blue-400" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+            <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
-          Perfil Energético Diário
+          Perfil Energetico Diario
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Comparativo entre geração, consumo e perdas operacionais
+          Comparativo entre geracao, consumo e perdas operacionais
         </CardDescription>
       </CardHeader>
       <CardContent>
