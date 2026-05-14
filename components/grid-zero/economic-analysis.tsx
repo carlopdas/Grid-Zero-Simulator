@@ -9,7 +9,7 @@ import {
   YAxis, 
   CartesianGrid, 
   ResponsiveContainer, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   Legend,
   Cell
 } from "recharts"
@@ -185,7 +185,7 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                   tickFormatter={(value) => `R$ ${value.toLocaleString()}`}
                   className="fill-muted-foreground"
                 />
-                <Tooltip 
+                <RechartsTooltip 
                   contentStyle={{
                     backgroundColor: 'var(--card)',
                     border: '1px solid var(--border)',
