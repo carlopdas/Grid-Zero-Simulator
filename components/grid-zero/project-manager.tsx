@@ -30,8 +30,9 @@ import {
   TariffConfig, 
   AnalysisMode 
 } from "@/lib/grid-zero-types"
-import { Save, FolderOpen, Trash2, ChevronDown, Plus, FileText } from "lucide-react"
+import { Save, FolderOpen, Trash2, ChevronDown, Plus, FileText, Download, Upload } from "lucide-react"
 import { toast } from "sonner"
+import { useRef } from "react"
 
 interface ProjectManagerProps {
   projectName: string
@@ -65,6 +66,7 @@ export function ProjectManager({
   const [projects, setProjects] = useState<Project[]>([])
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [loadDialogOpen, setLoadDialogOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setProjects(getAllProjects())
@@ -107,6 +109,81 @@ export function ProjectManager({
     deleteProject(id)
     setProjects(getAllProjects())
     toast.success(`Projeto "${name}" excluido`)
+  }
+
+  // Export project to .gridzero file
+  const handleExport = () => {
+    const projectData = {
+      version: "3.0",
+      exportedAt: new Date().toISOString(),
+      name: projectName || "Projeto Grid-Zero",
+      consumption,
+      generation,
+      battery,
+      generator,
+      tariff,
+      analysisMode,
+      windowClipping
+    }
+    
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${projectName || 'projeto'}.gridzero`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    toast.success("Projeto exportado com sucesso!")
+  }
+
+  // Import project from .gridzero file
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const projectData = JSON.parse(content)
+        
+        // Validate project data
+        if (!projectData.consumption || !projectData.generation) {
+          toast.error("Arquivo de projeto invalido")
+          return
+        }
+        
+        // Create project object for loading
+        const project: Project = {
+          id: `imported-${Date.now()}`,
+          name: projectData.name || file.name.replace('.gridzero', '').replace('.json', ''),
+          consumption: projectData.consumption,
+          generation: projectData.generation,
+          battery: projectData.battery || battery,
+          generator: projectData.generator || generator,
+          tariff: projectData.tariff || tariff,
+          analysisMode: projectData.analysisMode || 'pv-bess',
+          windowClipping: projectData.windowClipping || 100,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        
+        onProjectLoad(project)
+        onProjectNameChange(project.name)
+        toast.success(`Projeto "${project.name}" importado com sucesso!`)
+      } catch (error) {
+        toast.error("Erro ao ler arquivo de projeto")
+        console.error("Import error:", error)
+      }
+    }
+    reader.readAsText(file)
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -212,6 +289,30 @@ export function ProjectManager({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Export Button */}
+      <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handleExport}>
+        <Download className="h-3 w-3" />
+        <span className="hidden sm:inline">Exportar</span>
+      </Button>
+
+      {/* Import Button */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".gridzero,.json"
+        onChange={handleImport}
+        className="hidden"
+      />
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="h-8 gap-1" 
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <Upload className="h-3 w-3" />
+        <span className="hidden sm:inline">Importar</span>
+      </Button>
     </div>
   )
 }

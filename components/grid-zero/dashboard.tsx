@@ -20,6 +20,7 @@ import { MonthlyChart } from "./monthly-chart"
 import { InsightsPanel } from "./insights-panel"
 import { SimulationTab } from "./simulation-tab"
 import { EconomicAnalysis } from "./economic-analysis"
+import { InvestmentAnalysis } from "./investment-analysis"
 import { ReportGenerator } from "./report-generator"
 import { ThemeToggle } from "./theme-toggle"
 import { ProjectManager } from "./project-manager"
@@ -32,7 +33,9 @@ import {
   TariffConfig,
   SimulationResults,
   AnalysisMode,
-  IrradianceData
+  IrradianceData,
+  InvestmentConfig,
+  DEFAULT_MONTHLY_IRRADIANCE
 } from "@/lib/grid-zero-types"
 import { runGridZeroSimulation, generateSyntheticProfile, generateSolarFromIrradiance } from "@/lib/simulation-engine"
 import { 
@@ -48,9 +51,9 @@ import {
 } from "lucide-react"
 
 const defaultIrradiance: IrradianceData = {
-  mode: 'annual',
-  annualAverage: 5.0,
-  monthlyValues: Array(12).fill(5.0)
+  mode: 'monthly',
+  annualAverage: DEFAULT_MONTHLY_IRRADIANCE.reduce((a, b) => a + b, 0) / 12,
+  monthlyValues: [...DEFAULT_MONTHLY_IRRADIANCE]
 }
 
 const defaultConsumption: ConsumptionProfile = {
@@ -66,12 +69,16 @@ const defaultConsumption: ConsumptionProfile = {
 
 const defaultGeneration: GenerationData = {
   mode: 'synthetic',
-  hourlyGeneration: generateSolarFromIrradiance(15, 80, 5.0),
+  seasonalityMode: 'auto',
+  hourlyGeneration: generateSolarFromIrradiance(15, 80, defaultIrradiance.annualAverage),
   installedPower: 15,
   performanceRatio: 80,
   irradiance: defaultIrradiance,
   annualGeneration: 0,
-  monthlyAverage: 0
+  monthlyAverage: 0,
+  monthlyGeneration: DEFAULT_MONTHLY_IRRADIANCE.map(irr => 
+    generateSolarFromIrradiance(15, 80, irr).reduce((a, b) => a + b, 0) * 30
+  )
 }
 
 const defaultBattery: BatteryConfig = {
@@ -84,7 +91,11 @@ const defaultBattery: BatteryConfig = {
   minSoc: 20,
   maxSoc: 100,
   dod: 80,
-  quantity: 1
+  quantity: 1,
+  arbitrageEnabled: false,
+  arbitrageMinSoc: 10,
+  arbitragePriority: 'self-consumption',
+  arbitrageDailyLimit: 0
 }
 
 const defaultGenerator: GeneratorConfig = {
@@ -95,12 +106,22 @@ const defaultGenerator: GeneratorConfig = {
 const defaultTariff: TariffConfig = {
   enabled: false,
   energyRate: 0.85,
-  te: 0,
-  tusd: 0,
+  te: 0.45,
+  tusd: 0.40,
   peakRate: 1.20,
   offPeakRate: 0.65,
   contractedDemand: 0,
-  peakHours: { start: 17, end: 21 }
+  peakHours: { start: 17, end: 21 },
+  gdType: 'GD1',
+  compensationFactor: 1.0
+}
+
+const defaultInvestment: InvestmentConfig = {
+  totalInvestment: 0,
+  annualMaintenanceCost: 0,
+  annualInterestRate: 8,
+  systemLifespan: 25,
+  tariffInflation: 3
 }
 
 const emptyResults: SimulationResults = {
@@ -124,10 +145,14 @@ const emptyResults: SimulationResults = {
     monthlySavings: 0,
     annualSavings: 0,
     paybackYears: 0,
+    paybackDiscounted: 0,
     roi: 0,
     lcoe: 0,
     gridEnergySaved: 0,
-    peakShavingSavings: 0
+    peakShavingSavings: 0,
+    arbitrageSavings: 0,
+    irr: 0,
+    npv: 0
   },
   sizing: {
     requiredEnergy: 0,
@@ -150,6 +175,7 @@ export function GridZeroDashboard() {
   const [battery, setBattery] = useState<BatteryConfig>(defaultBattery)
   const [generator, setGenerator] = useState<GeneratorConfig>(defaultGenerator)
   const [tariff, setTariff] = useState<TariffConfig>(defaultTariff)
+  const [investment, setInvestment] = useState<InvestmentConfig>(defaultInvestment)
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('pv-bess')
   const [results, setResults] = useState<SimulationResults>(emptyResults)
   const [isSimulating, setIsSimulating] = useState(false)
@@ -423,6 +449,7 @@ export function GridZeroDashboard() {
               <MonthlyChart 
                 results={results} 
                 monthlyConsumption={consumption.monthlyProfile}
+                generation={generation}
               />
               <InsightsPanel 
                 results={results} 
@@ -442,6 +469,11 @@ export function GridZeroDashboard() {
               <EconomicAnalysis 
                 results={results} 
                 tariff={tariff} 
+              />
+              <InvestmentAnalysis
+                economic={results.economic}
+                investment={investment}
+                onInvestmentChange={setInvestment}
               />
             </motion.div>
           </TabsContent>

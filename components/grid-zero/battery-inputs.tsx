@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BatteryConfig, BatterySpec } from "@/lib/grid-zero-types"
-import { Battery, Upload, FileText, AlertCircle, Check } from "lucide-react"
+import { Battery, Upload, FileText, AlertCircle, Check, Zap, TrendingUp } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useRef, useState } from "react"
 
 interface BatteryInputsProps {
@@ -297,6 +298,78 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
             <p className="text-xs text-muted-foreground">
               {battery.quantity || 1} x {battery.capacity || 0} kWh = {((battery.capacity || 0) * (battery.quantity || 1)).toFixed(1)} kWh total
             </p>
+          </div>
+
+          {/* Arbitrage Section */}
+          <div className="space-y-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <Label className="text-base font-semibold text-foreground">Arbitragem de Tarifa</Label>
+              </div>
+              <Switch
+                checked={battery.arbitrageEnabled || false}
+                onCheckedChange={(enabled) => onChange({ ...battery, arbitrageEnabled: enabled })}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Comprar energia da rede fora ponta (tarifa baixa) e descarregar na ponta (tarifa alta)
+            </p>
+            
+            {battery.arbitrageEnabled && (
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="arbitrageMinSoc">SOC Minimo Reservado para Emergencias (%)</Label>
+                  <Input
+                    id="arbitrageMinSoc"
+                    type="number"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={battery.arbitrageMinSoc || 10}
+                    onChange={(e) => onChange({ ...battery, arbitrageMinSoc: parseFloat(e.target.value) || 10 })}
+                    placeholder="10"
+                  />
+                  <p className="text-xs text-muted-foreground">Reserva minima nao utilizada na arbitragem</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Prioridade de Uso da Bateria</Label>
+                  <RadioGroup
+                    value={battery.arbitragePriority || 'self-consumption'}
+                    onValueChange={(v) => onChange({ ...battery, arbitragePriority: v as 'self-consumption' | 'arbitrage' })}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="self-consumption" id="self-consumption" />
+                      <Label htmlFor="self-consumption" className="text-sm cursor-pointer">
+                        Prioridade: Autoconsumo (descarga primeiro para carga local)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="arbitrage" id="arbitrage" />
+                      <Label htmlFor="arbitrage" className="text-sm cursor-pointer">
+                        Prioridade: Arbitragem (descarga no horario ponta)
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="arbitrageDailyLimit">Limite de Compra por Dia (kWh)</Label>
+                  <Input
+                    id="arbitrageDailyLimit"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={battery.arbitrageDailyLimit || 0}
+                    onChange={(e) => onChange({ ...battery, arbitrageDailyLimit: parseFloat(e.target.value) || 0 })}
+                    placeholder="0 = sem limite"
+                  />
+                  <p className="text-xs text-muted-foreground">0 = sem limite. Limita quanto da bateria pode ser usado para arbitragem por dia</p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       )}

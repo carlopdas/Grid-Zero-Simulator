@@ -37,6 +37,15 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
   let potentialExport = 0
   let totalGridImport = 0
   let totalGridExport = 0
+  let totalArbitrageCharge = 0
+  let totalArbitrageDischarge = 0
+  
+  // Arbitrage tracking
+  const arbitrageEnabled = battery.arbitrageEnabled || false
+  const arbitrageMinSoc = battery.arbitrageMinSoc || 10
+  const arbitragePriority = battery.arbitragePriority || 'self-consumption'
+  const arbitrageDailyLimit = battery.arbitrageDailyLimit || 0
+  let arbitrageChargedToday = 0
   
   for (let hour = 0; hour < 24; hour++) {
     let originalGen = 0
@@ -60,8 +69,8 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     let gridExport = 0
     
     const isPeakHour = tariff.enabled && 
-      hour >= tariff.peakHours.start && 
-      hour < tariff.peakHours.end
+      (hour + 0.5) >= tariff.peakHours.start && 
+      (hour + 0.5) < tariff.peakHours.end
     
     if (analysisMode === 'load-only') {
       // Load only - no generation
@@ -149,6 +158,59 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
       totalGridImport += gridImport
     }
     
+    // Arbitrage logic: Buy energy off-peak to charge battery, discharge during peak
+    if (arbitrageEnabled && battery.enabled && analysisMode === 'pv-bess') {
+      const maxSocLimit = battery.maxSoc || 100
+      
+      if (!isPeakHour) {
+        // Off-peak: Buy energy from grid to charge battery for arbitrage
+        const arbitrageSOCRoom = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
+        const dailyLimitRemaining = arbitrageDailyLimit > 0 
+          ? Math.max(0, arbitrageDailyLimit - arbitrageChargedToday)
+          : Infinity
+        
+        const maxArbitrageCharge = Math.min(
+          arbitrageSOCRoom / (batteryEfficiency / 100),
+          totalChargePower - batteryCharge, // Remaining charge power
+          dailyLimitRemaining
+        )
+        
+        if (maxArbitrageCharge > 0 && currentSoc < maxSocLimit) {
+          const arbitrageChargeEnergy = maxArbitrageCharge * (batteryEfficiency / 100)
+          batteryCharge += arbitrageChargeEnergy
+          currentSoc += (arbitrageChargeEnergy / totalBatteryCapacity) * 100
+          currentSoc = Math.min(currentSoc, maxSocLimit)
+          gridImport += maxArbitrageCharge
+          totalGridImport += maxArbitrageCharge
+          totalArbitrageCharge += maxArbitrageCharge
+          arbitrageChargedToday += maxArbitrageCharge
+          totalStored += arbitrageChargeEnergy
+        }
+      } else if (isPeakHour && arbitragePriority === 'arbitrage') {
+        // Peak hour with arbitrage priority: discharge more aggressively
+        const minSocForArbitrage = Math.max(battery.minSoc, arbitrageMinSoc)
+        const additionalDischargeAvailable = totalBatteryCapacity * (currentSoc - minSocForArbitrage) / 100
+        const additionalDischarge = Math.min(
+          additionalDischargeAvailable,
+          totalDischargePower - batteryDischarge
+        )
+        
+        if (additionalDischarge > 0) {
+          batteryDischarge += additionalDischarge
+          currentSoc -= (additionalDischarge / totalBatteryCapacity) * 100
+          currentSoc = Math.max(currentSoc, minSocForArbitrage)
+          totalArbitrageDischarge += additionalDischarge
+          totalDischarged += additionalDischarge
+          // Reduce grid import or create export
+          if (gridImport > 0) {
+            const reduction = Math.min(gridImport, additionalDischarge)
+            gridImport -= reduction
+            totalGridImport -= reduction
+          }
+        }
+      }
+    }
+    
     totalGenerated += clippedGen
     totalConsumed += load
     
@@ -187,7 +249,9 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     hourlyData, 
     tariff, 
     totalConsumed, 
-    totalSelfConsumed + totalDischarged
+    totalSelfConsumed + totalDischarged,
+    totalArbitrageCharge,
+    totalArbitrageDischarge
   )
   
   // Sizing calculations
@@ -220,9 +284,11 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
 
 function calculateEconomics(
   hourlyData: HourlySimulationResult[],
-  tariff: { enabled: boolean; energyRate: number; peakRate: number; offPeakRate: number },
+  tariff: { enabled: boolean; energyRate: number; peakRate: number; offPeakRate: number; compensationFactor?: number; te?: number; tusd?: number },
   totalConsumed: number,
-  energySaved: number
+  energySaved: number,
+  arbitrageCharge: number = 0,
+  arbitrageDischarge: number = 0
 ): EconomicResults {
   if (!tariff.enabled) {
     return {
@@ -230,35 +296,57 @@ function calculateEconomics(
       monthlySavings: 0,
       annualSavings: 0,
       paybackYears: 0,
+      paybackDiscounted: 0,
       roi: 0,
       lcoe: 0,
       gridEnergySaved: energySaved,
-      peakShavingSavings: 0
+      peakShavingSavings: 0,
+      arbitrageSavings: 0,
+      irr: 0,
+      npv: 0
     }
   }
   
   let dailySavings = 0
   let peakSavings = 0
+  let arbitrageSavings = 0
+  
+  // Apply Lei 14.300 compensation factor
+  const compensationFactor = tariff.compensationFactor || 1.0
+  
+  // Calculate arbitrage savings: sell at peak - buy at off-peak
+  const arbitrageCost = arbitrageCharge * tariff.offPeakRate
+  const arbitrageRevenue = arbitrageDischarge * tariff.peakRate
+  arbitrageSavings = (arbitrageRevenue - arbitrageCost) * 30 // Monthly
   
   hourlyData.forEach(h => {
     const savedEnergy = h.usefulGeneration + h.batteryDischarge
+    // For GD: TE is 100% compensated, TUSD is compensated according to GD type
+    const effectiveRate = h.isPeakHour 
+      ? tariff.peakRate * compensationFactor
+      : tariff.offPeakRate * compensationFactor
+    
     if (h.isPeakHour) {
-      dailySavings += savedEnergy * tariff.peakRate
-      peakSavings += savedEnergy * (tariff.peakRate - tariff.offPeakRate)
+      dailySavings += savedEnergy * effectiveRate
+      peakSavings += savedEnergy * (tariff.peakRate - tariff.offPeakRate) * compensationFactor
     } else {
-      dailySavings += savedEnergy * tariff.offPeakRate
+      dailySavings += savedEnergy * effectiveRate
     }
   })
   
   return {
     dailyGeneration: hourlyData.reduce((sum, h) => sum + h.usefulGeneration, 0),
-    monthlySavings: dailySavings * 30,
-    annualSavings: dailySavings * 365,
-    paybackYears: 0, // Would need system cost
+    monthlySavings: dailySavings * 30 + arbitrageSavings,
+    annualSavings: dailySavings * 365 + arbitrageSavings * 12,
+    paybackYears: 0,
+    paybackDiscounted: 0,
     roi: 0,
     lcoe: 0,
     gridEnergySaved: energySaved,
-    peakShavingSavings: peakSavings * 30
+    peakShavingSavings: peakSavings * 30,
+    arbitrageSavings: arbitrageSavings,
+    irr: 0,
+    npv: 0
   }
 }
 

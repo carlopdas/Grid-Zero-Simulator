@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SimulationResults, MONTH_NAMES } from "@/lib/grid-zero-types"
+import { SimulationResults, MONTH_NAMES, GenerationData } from "@/lib/grid-zero-types"
 import { 
   ComposedChart, 
   Bar,
@@ -18,6 +18,7 @@ import { Calendar } from "lucide-react"
 interface MonthlyChartProps {
   results: SimulationResults
   monthlyConsumption?: number[]
+  generation?: GenerationData
 }
 
 // Colors for charts
@@ -28,24 +29,28 @@ const COLORS = {
   curtailed: '#ef4444',
 }
 
-export function MonthlyChart({ results, monthlyConsumption }: MonthlyChartProps) {
-  // Generate monthly data based on daily simulation
-  // For now, we extrapolate daily data to monthly
+export function MonthlyChart({ results, monthlyConsumption, generation }: MonthlyChartProps) {
+  // Generate monthly data based on daily simulation and seasonal irradiance
   const dailyGeneration = results.totalGenerated
   const dailyConsumption = results.totalConsumed
   const dailyCurtailed = results.curtailedEnergy
   const dailyImport = results.gridImport
   
+  // Get monthly generation from generation data if available (uses seasonal irradiance)
+  const monthlyGenerationFromSeasonality = generation?.monthlyGeneration
+  
   // Create 12-month data
   const chartData = MONTH_NAMES.map((month, index) => {
-    // Seasonal variation factor (higher in summer months in Brazil - Nov to Feb)
-    const seasonalFactor = [0.95, 0.92, 0.95, 0.98, 1.0, 1.02, 1.05, 1.08, 1.05, 1.0, 0.98, 0.95][index]
     const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][index]
     
-    const monthlyGen = dailyGeneration * daysInMonth * seasonalFactor
+    // Use monthly generation with seasonality if available, otherwise fall back to daily * days
+    const monthlyGen = monthlyGenerationFromSeasonality?.[index] || (dailyGeneration * daysInMonth)
     const monthlyCons = (monthlyConsumption?.[index] || dailyConsumption * daysInMonth)
-    const monthlyCurtailed = dailyCurtailed * daysInMonth * seasonalFactor
-    const monthlyImportCalc = dailyImport * daysInMonth
+    
+    // Calculate curtailed and import proportionally
+    const generationRatio = monthlyGen / (dailyGeneration * daysInMonth || 1)
+    const monthlyCurtailed = dailyCurtailed * daysInMonth * generationRatio
+    const monthlyImportCalc = Math.max(0, monthlyCons - monthlyGen + monthlyCurtailed)
     
     return {
       mes: month.substring(0, 3),

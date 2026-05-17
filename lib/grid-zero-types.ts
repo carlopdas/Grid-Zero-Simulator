@@ -12,17 +12,23 @@ export interface ConsumptionProfile {
 export interface IrradianceData {
   mode: 'annual' | 'monthly'
   annualAverage: number
-  monthlyValues: number[]
+  monthlyValues: number[] // kWh/m²/dia for each month
 }
+
+// Default monthly irradiance values for Brazil (typical values)
+export const DEFAULT_MONTHLY_IRRADIANCE = [5.8, 5.6, 5.4, 5.0, 4.6, 4.4, 4.5, 4.9, 5.2, 5.5, 5.7, 5.9]
 
 export interface GenerationData {
   mode: 'synthetic' | 'manual'
+  seasonalityMode: 'auto' | 'manual-monthly' // New: how to apply seasonality
   hourlyGeneration: number[]
+  monthlyHourlyProfiles?: number[][] // 12 arrays of 24 hours for manual monthly mode
   installedPower: number
   performanceRatio: number
   irradiance: IrradianceData
   annualGeneration: number
   monthlyAverage: number
+  monthlyGeneration: number[] // 12 values - one per month
 }
 
 export interface BatterySpec {
@@ -59,12 +65,19 @@ export interface BatteryConfig {
   dod: number
   specs?: BatterySpec
   quantity: number
+  // Arbitrage settings
+  arbitrageEnabled: boolean
+  arbitrageMinSoc: number // Min SOC reserved for emergencies
+  arbitragePriority: 'self-consumption' | 'arbitrage'
+  arbitrageDailyLimit: number // 0 = no limit
 }
 
 export interface GeneratorConfig {
   enabled: boolean
   nominalPower: number
 }
+
+export type GDType = 'GD1' | 'GD2' | 'GD3'
 
 export interface TariffConfig {
   enabled: boolean
@@ -74,7 +87,20 @@ export interface TariffConfig {
   peakRate: number
   offPeakRate: number
   contractedDemand: number
-  peakHours: { start: number; end: number }
+  peakHours: { start: number; end: number } // Now supports half-hour (e.g., 17.5 = 17:30)
+  // Lei 14.300/2022
+  gdType: GDType
+  accessRequestDate?: string // ISO date string
+  compensationFactor: number // Calculated based on GD type and year
+}
+
+// Lei 14.300/2022 - Percentuais de desconto sobre TUSD
+export const GD_COMPENSATION_TABLE = {
+  GD1: { 2023: 0, 2024: 0, 2025: 0, 2026: 0, 2027: 0, 2028: 0, 2029: 0, 2030: 0, 2031: 0 },
+  GD2: { 2023: 4.1, 2024: 8.1, 2025: 12.2, 2026: 16.2, 2027: 20.3, 2028: 24.3, 2029: 27.0, 2030: 27.0, 2031: 27.0 },
+  GD3: { 2023: 4.1, 2024: 8.1, 2025: 12.2, 2026: 16.2, 2027: 20.3, 2028: 24.3, 2029: 27.0, 2030: 27.0, 2031: 27.0 },
+  // Special case: GD3 with remote self-consumption > 500kW or shared generation > 25% credit
+  GD3_SPECIAL: { 2023: 29.3, 2024: 29.3, 2025: 29.3, 2026: 29.3, 2027: 29.3, 2028: 29.3, 2029: 29.3, 2030: 29.3, 2031: 29.3 }
 }
 
 export type AnalysisMode = 'load-only' | 'pv-only' | 'pv-bess'
@@ -111,10 +137,22 @@ export interface EconomicResults {
   monthlySavings: number
   annualSavings: number
   paybackYears: number
+  paybackDiscounted: number
   roi: number
   lcoe: number
   gridEnergySaved: number
   peakShavingSavings: number
+  arbitrageSavings: number
+  irr: number // Taxa Interna de Retorno
+  npv: number // Valor Presente Liquido
+}
+
+export interface InvestmentConfig {
+  totalInvestment: number
+  annualMaintenanceCost: number
+  annualInterestRate: number
+  systemLifespan: number
+  tariffInflation: number
 }
 
 export interface SizingResults {

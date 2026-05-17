@@ -13,7 +13,7 @@ import {
   Legend,
   Cell
 } from "recharts"
-import { TrendingUp, DollarSign, Calendar, AlertCircle, Info, Zap, Battery } from "lucide-react"
+import { TrendingUp, DollarSign, Calendar, AlertCircle, Info, Zap, Battery, Calculator } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface EconomicAnalysisProps {
@@ -243,6 +243,68 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
                 R$ {economic.monthlySavings.toFixed(2)}
               </span>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Formula Card */}
+      <Card className="glass-card section-amber animate-fade-in-up">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
+              <Calculator className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            Formula da Economia Mensal
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Metodologia de calculo utilizada
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-xl bg-secondary p-4 font-mono text-sm">
+            <p className="text-foreground">
+              <span className="font-bold text-amber-600 dark:text-amber-400">Economia Mensal</span> = 
+              <span className="text-green-600 dark:text-green-400"> (Energia Solar Autoconsumida x Tarifa Media)</span> +
+              <span className="text-blue-600 dark:text-blue-400"> (Energia Bateria Descarregada x Tarifa Evitada)</span> +
+              <span className="text-purple-600 dark:text-purple-400"> (Peak Shaving x Demanda Contratada)</span> -
+              <span className="text-red-600 dark:text-red-400"> (Energia Arbitragem x Tarifa Fora Ponta)</span>
+            </p>
+          </div>
+          
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="space-y-2 rounded-lg bg-green-50 dark:bg-green-900/20 p-3">
+              <p className="font-semibold text-green-700 dark:text-green-400">Energia Solar Autoconsumida</p>
+              <p className="text-muted-foreground">kWh gerados e consumidos instantaneamente</p>
+              <p className="font-medium text-foreground">{results.selfConsumption.toFixed(1)} kWh/dia</p>
+            </div>
+            
+            <div className="space-y-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3">
+              <p className="font-semibold text-blue-700 dark:text-blue-400">Energia da Bateria Descarregada</p>
+              <p className="text-muted-foreground">kWh armazenados e depois utilizados</p>
+              <p className="font-medium text-foreground">{results.dischargedEnergy.toFixed(1)} kWh/dia</p>
+            </div>
+            
+            <div className="space-y-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 p-3">
+              <p className="font-semibold text-purple-700 dark:text-purple-400">Peak Shaving</p>
+              <p className="text-muted-foreground">Economia por reducao de demanda ponta</p>
+              <p className="font-medium text-foreground">R$ {economic.peakShavingSavings.toFixed(2)}/mes</p>
+            </div>
+            
+            <div className="space-y-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3">
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Arbitragem de Tarifa</p>
+              <p className="text-muted-foreground">Economia compra FP / venda Ponta</p>
+              <p className="font-medium text-foreground">R$ {(economic.arbitrageSavings || 0).toFixed(2)}/mes</p>
+            </div>
+          </div>
+          
+          <div className="rounded-xl bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 p-4">
+            <p className="text-xs text-muted-foreground uppercase mb-1">Exemplo de Calculo (valores atuais)</p>
+            <p className="text-sm text-foreground">
+              ({results.selfConsumption.toFixed(0)} kWh x R${tariff.offPeakRate.toFixed(2)}) + 
+              ({results.dischargedEnergy.toFixed(0)} kWh x R${tariff.peakRate.toFixed(2)}) + 
+              R${economic.peakShavingSavings.toFixed(0)} - R${(economic.arbitrageSavings || 0).toFixed(0)} = 
+              <span className="font-bold text-green-600 dark:text-green-400"> R$ {(economic.monthlySavings / 30).toFixed(2)}/dia</span>
+            </p>
           </div>
         </CardContent>
       </Card>

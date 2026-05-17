@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { GenerationData, MONTH_NAMES, SOLAR_HOURS } from "@/lib/grid-zero-types"
+import { GenerationData, MONTH_NAMES, SOLAR_HOURS, DEFAULT_MONTHLY_IRRADIANCE } from "@/lib/grid-zero-types"
 import { generateSolarFromIrradiance } from "@/lib/simulation-engine"
 import { Sun, Upload, Edit3, Calendar, Sparkles } from "lucide-react"
 import { useRef, useState } from "react"
@@ -20,11 +20,37 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showManualTable, setShowManualTable] = useState(false)
 
-  const handleIrradianceModeChange = (mode: 'annual' | 'monthly') => {
-    onChange({
-      ...generation,
-      irradiance: { ...generation.irradiance, mode }
+  // Calculate monthly generation based on irradiance
+  const calculateMonthlyGeneration = (power: number, pr: number, monthlyIrr: number[]) => {
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    return monthlyIrr.map((irr, idx) => {
+      const dailyGen = generateSolarFromIrradiance(power, pr, irr).reduce((a, b) => a + b, 0)
+      return dailyGen * daysInMonth[idx]
     })
+  }
+
+  const handleIrradianceModeChange = (mode: 'annual' | 'monthly') => {
+    if (mode === 'monthly' && generation.irradiance.monthlyValues.every(v => v === generation.irradiance.annualAverage)) {
+      // Initialize with default seasonal values
+      const monthlyVals = [...DEFAULT_MONTHLY_IRRADIANCE]
+      const avg = monthlyVals.reduce((a, b) => a + b, 0) / 12
+      const newHourly = generateSolarFromIrradiance(generation.installedPower, generation.performanceRatio, avg)
+      const monthlyGen = calculateMonthlyGeneration(generation.installedPower, generation.performanceRatio, monthlyVals)
+      
+      onChange({
+        ...generation,
+        irradiance: { mode, annualAverage: avg, monthlyValues: monthlyVals },
+        hourlyGeneration: newHourly,
+        annualGeneration: monthlyGen.reduce((a, b) => a + b, 0),
+        monthlyAverage: monthlyGen.reduce((a, b) => a + b, 0) / 12,
+        monthlyGeneration: monthlyGen
+      })
+    } else {
+      onChange({
+        ...generation,
+        irradiance: { ...generation.irradiance, mode }
+      })
+    }
   }
 
   const handleAnnualIrradianceChange = (value: number) => {
@@ -34,12 +60,18 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
       generation.performanceRatio,
       value
     )
+    const dailyGen = newHourly.reduce((a, b) => a + b, 0)
+    const monthlyGen = Array(12).fill(0).map((_, idx) => {
+      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][idx]
+      return dailyGen * daysInMonth
+    })
     onChange({
       ...generation,
       irradiance: newIrradiance,
       hourlyGeneration: newHourly,
-      annualGeneration: newHourly.reduce((a, b) => a + b, 0) * 365,
-      monthlyAverage: newHourly.reduce((a, b) => a + b, 0) * 30
+      annualGeneration: monthlyGen.reduce((a, b) => a + b, 0),
+      monthlyAverage: monthlyGen.reduce((a, b) => a + b, 0) / 12,
+      monthlyGeneration: monthlyGen
     })
   }
 
@@ -66,12 +98,16 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
       average
     )
     
+    // Calculate monthly generation with seasonality
+    const monthlyGen = calculateMonthlyGeneration(generation.installedPower, generation.performanceRatio, newMonthly)
+    
     onChange({
       ...generation,
       irradiance: newIrradiance,
       hourlyGeneration: newHourly,
-      annualGeneration: newHourly.reduce((a, b) => a + b, 0) * 365,
-      monthlyAverage: newHourly.reduce((a, b) => a + b, 0) * 30
+      annualGeneration: monthlyGen.reduce((a, b) => a + b, 0),
+      monthlyAverage: monthlyGen.reduce((a, b) => a + b, 0) / 12,
+      monthlyGeneration: monthlyGen
     })
   }
 
@@ -98,12 +134,14 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
       generation.performanceRatio,
       generation.irradiance.annualAverage
     )
+    const monthlyGen = calculateMonthlyGeneration(value, generation.performanceRatio, generation.irradiance.monthlyValues)
     onChange({
       ...generation,
       installedPower: value,
       hourlyGeneration: newHourly,
-      annualGeneration: newHourly.reduce((a, b) => a + b, 0) * 365,
-      monthlyAverage: newHourly.reduce((a, b) => a + b, 0) * 30
+      annualGeneration: monthlyGen.reduce((a, b) => a + b, 0),
+      monthlyAverage: monthlyGen.reduce((a, b) => a + b, 0) / 12,
+      monthlyGeneration: monthlyGen
     })
   }
 
@@ -113,12 +151,14 @@ export function GenerationInputs({ generation, onChange }: GenerationInputsProps
       value,
       generation.irradiance.annualAverage
     )
+    const monthlyGen = calculateMonthlyGeneration(generation.installedPower, value, generation.irradiance.monthlyValues)
     onChange({
       ...generation,
       performanceRatio: value,
       hourlyGeneration: newHourly,
-      annualGeneration: newHourly.reduce((a, b) => a + b, 0) * 365,
-      monthlyAverage: newHourly.reduce((a, b) => a + b, 0) * 30
+      annualGeneration: monthlyGen.reduce((a, b) => a + b, 0),
+      monthlyAverage: monthlyGen.reduce((a, b) => a + b, 0) / 12,
+      monthlyGeneration: monthlyGen
     })
   }
 
