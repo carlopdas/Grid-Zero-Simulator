@@ -53,6 +53,8 @@ export interface BatterySpec {
   operatingTemperature: { min: number; max: number }
 }
 
+export type BatteryStrategy = 'auto_optimization' | 'solar_only' | 'arbitrage_only'
+
 export interface BatteryConfig {
   enabled: boolean
   capacity: number
@@ -67,9 +69,9 @@ export interface BatteryConfig {
   quantity: number
   // Arbitrage settings
   arbitrageEnabled: boolean
-  arbitrageMinSoc: number // Min SOC reserved for emergencies
-  arbitragePriority: 'self-consumption' | 'arbitrage'
-  arbitrageDailyLimit: number // 0 = no limit
+  arbitrageMinSoc: number // Min SOC reserved for emergencies - NEVER discharge below this
+  arbitrageStrategy: BatteryStrategy // New: clearer strategy selection
+  arbitrageDailyLimit: number // 0 = no limit, max kWh to buy from grid per day
 }
 
 export interface GeneratorConfig {

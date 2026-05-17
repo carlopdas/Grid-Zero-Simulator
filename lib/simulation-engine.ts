@@ -8,6 +8,7 @@ import {
   INDUSTRIAL_PROFILE,
   RESIDENTIAL_PROFILE,
   DEFAULT_SOLAR_PROFILE,
+  BatteryStrategy,
 } from './grid-zero-types'
 
 export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResults {
@@ -40,12 +41,16 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
   let totalArbitrageCharge = 0
   let totalArbitrageDischarge = 0
   
-  // Arbitrage tracking
+  // Arbitrage tracking - FIXED LOGIC
   const arbitrageEnabled = battery.arbitrageEnabled || false
-  const arbitrageMinSoc = battery.arbitrageMinSoc || 10
-  const arbitragePriority = battery.arbitragePriority || 'self-consumption'
+  const arbitrageMinSoc = battery.arbitrageMinSoc || 10 // Emergency reserve - NEVER go below
+  const arbitrageStrategy: BatteryStrategy = (battery.arbitrageStrategy as BatteryStrategy) || 'auto_optimization'
   const arbitrageDailyLimit = battery.arbitrageDailyLimit || 0
   let arbitrageChargedToday = 0
+  
+  // Min SOC limits
+  const absoluteMinSoc = Math.max(battery.minSoc || 20, arbitrageMinSoc) // Never go below this
+  const maxSocLimit = battery.maxSoc || 100
   
   for (let hour = 0; hour < 24; hour++) {
     let originalGen = 0
@@ -68,70 +73,262 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     let gridImport = 0
     let gridExport = 0
     
+    // FIXED: Check peak hour with half-hour precision
     const isPeakHour = tariff.enabled && 
       (hour + 0.5) >= tariff.peakHours.start && 
       (hour + 0.5) < tariff.peakHours.end
     
+    // ============================================
+    // CORE LOGIC: Depends on strategy and time
+    // ============================================
+    
     if (analysisMode === 'load-only') {
-      // Load only - no generation
+      // Load only - no generation, no battery
       usefulGen = 0
       deficit = load
       gridImport = load
+      totalGridImport += gridImport
+    } else if (battery.enabled && arbitrageEnabled && analysisMode === 'pv-bess') {
+      // ============================================
+      // ARBITRAGE MODE - CORRECTED LOGIC
+      // ============================================
+      
+      // Step 1: Use solar generation first (always)
+      usefulGen = Math.min(clippedGen, load)
+      totalSelfConsumed += usefulGen
+      let remainingLoad = load - usefulGen
+      let excessSolar = clippedGen - usefulGen
+      
+      // Step 2: Store excess solar in battery (always, regardless of strategy)
+      if (excessSolar > 0 && currentSoc < maxSocLimit) {
+        const availableCapacityKwh = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
+        const maxChargeEnergy = Math.min(
+          excessSolar,
+          totalChargePower,
+          availableCapacityKwh / (batteryEfficiency / 100)
+        )
+        
+        const chargeEnergy = maxChargeEnergy * (batteryEfficiency / 100)
+        batteryCharge += chargeEnergy
+        currentSoc += (chargeEnergy / totalBatteryCapacity) * 100
+        currentSoc = Math.min(currentSoc, maxSocLimit)
+        excessSolar -= maxChargeEnergy
+        totalStored += chargeEnergy
+      }
+      
+      // Remaining excess is curtailed
+      curtailed = excessSolar
+      totalCurtailed += curtailed
+      potentialExport += excessSolar
+      
+      // Step 3: Battery behavior depends on strategy and time
+      if (arbitrageStrategy === 'auto_optimization') {
+        // ============================================
+        // AUTO OPTIMIZATION STRATEGY (RECOMMENDED)
+        // - Off-peak: Charge from grid (buy cheap)
+        // - Peak: Discharge to cover load (avoid expensive)
+        // - Also uses battery for self-consumption when solar insufficient
+        // ============================================
+        
+        if (isPeakHour) {
+          // PEAK HOUR: Discharge battery to cover load
+          if (remainingLoad > 0 && currentSoc > absoluteMinSoc) {
+            const availableEnergyKwh = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
+            const maxDischargeEnergy = Math.min(
+              remainingLoad,
+              totalDischargePower,
+              availableEnergyKwh
+            )
+            
+            batteryDischarge = maxDischargeEnergy
+            currentSoc -= (batteryDischarge / totalBatteryCapacity) * 100
+            currentSoc = Math.max(currentSoc, absoluteMinSoc)
+            remainingLoad -= batteryDischarge
+            totalDischarged += batteryDischarge
+            totalArbitrageDischarge += batteryDischarge
+            totalSelfConsumed += batteryDischarge
+          }
+          
+          // If still remaining load, import from grid (expensive)
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
+          }
+        } else {
+          // OFF-PEAK HOUR: DO NOT discharge for load (buy cheap instead)
+          // Only discharge if strategy is solar_only or grid unavailable
+          
+          // First: Import from grid to cover remaining load (cheap)
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
+          }
+          
+          // Then: Charge battery from grid for tomorrow's peak
+          const dailyLimitRemaining = arbitrageDailyLimit > 0 
+            ? Math.max(0, arbitrageDailyLimit - arbitrageChargedToday)
+            : Infinity
+          
+          const availableCapacityKwh = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
+          const maxArbitrageCharge = Math.min(
+            availableCapacityKwh / (batteryEfficiency / 100),
+            totalChargePower - (batteryCharge / (batteryEfficiency / 100)), // Remaining charge power
+            dailyLimitRemaining
+          )
+          
+          if (maxArbitrageCharge > 0.1 && currentSoc < maxSocLimit) {
+            const arbitrageChargeEnergy = maxArbitrageCharge * (batteryEfficiency / 100)
+            batteryCharge += arbitrageChargeEnergy
+            currentSoc += (arbitrageChargeEnergy / totalBatteryCapacity) * 100
+            currentSoc = Math.min(currentSoc, maxSocLimit)
+            gridImport += maxArbitrageCharge
+            totalGridImport += maxArbitrageCharge
+            totalArbitrageCharge += maxArbitrageCharge
+            arbitrageChargedToday += maxArbitrageCharge
+            totalStored += arbitrageChargeEnergy
+          }
+        }
+        
+      } else if (arbitrageStrategy === 'solar_only') {
+        // ============================================
+        // SOLAR ONLY STRATEGY
+        // - Only charge battery from solar excess
+        // - Discharge for self-consumption anytime
+        // - NO grid charging
+        // ============================================
+        
+        // Discharge to cover remaining load (any hour)
+        if (remainingLoad > 0 && currentSoc > absoluteMinSoc) {
+          const availableEnergyKwh = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
+          const maxDischargeEnergy = Math.min(
+            remainingLoad,
+            totalDischargePower,
+            availableEnergyKwh
+          )
+          
+          batteryDischarge = maxDischargeEnergy
+          currentSoc -= (batteryDischarge / totalBatteryCapacity) * 100
+          currentSoc = Math.max(currentSoc, absoluteMinSoc)
+          remainingLoad -= batteryDischarge
+          totalDischarged += batteryDischarge
+          totalSelfConsumed += batteryDischarge
+        }
+        
+        // Import remaining from grid
+        if (remainingLoad > 0) {
+          gridImport = remainingLoad
+          totalGridImport += gridImport
+          deficit = remainingLoad
+        }
+        
+      } else if (arbitrageStrategy === 'arbitrage_only') {
+        // ============================================
+        // ARBITRAGE ONLY STRATEGY
+        // - Off-peak: Charge from grid ONLY (ignore load)
+        // - Peak: Discharge FULLY (ignore load, just sell/offset)
+        // ============================================
+        
+        if (isPeakHour) {
+          // Discharge maximum possible
+          if (currentSoc > absoluteMinSoc) {
+            const availableEnergyKwh = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
+            const maxDischargeEnergy = Math.min(
+              totalDischargePower,
+              availableEnergyKwh
+            )
+            
+            batteryDischarge = maxDischargeEnergy
+            currentSoc -= (batteryDischarge / totalBatteryCapacity) * 100
+            currentSoc = Math.max(currentSoc, absoluteMinSoc)
+            totalDischarged += batteryDischarge
+            totalArbitrageDischarge += batteryDischarge
+            
+            // Use discharge to cover load first
+            const dischargeForLoad = Math.min(batteryDischarge, remainingLoad)
+            remainingLoad -= dischargeForLoad
+            totalSelfConsumed += dischargeForLoad
+          }
+          
+          // Import remaining from grid
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
+          }
+        } else {
+          // Off-peak: Import for load AND charge battery
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
+          }
+          
+          // Charge battery from grid
+          const dailyLimitRemaining = arbitrageDailyLimit > 0 
+            ? Math.max(0, arbitrageDailyLimit - arbitrageChargedToday)
+            : Infinity
+          
+          const availableCapacityKwh = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
+          const maxArbitrageCharge = Math.min(
+            availableCapacityKwh / (batteryEfficiency / 100),
+            totalChargePower - (batteryCharge / (batteryEfficiency / 100)),
+            dailyLimitRemaining
+          )
+          
+          if (maxArbitrageCharge > 0.1 && currentSoc < maxSocLimit) {
+            const arbitrageChargeEnergy = maxArbitrageCharge * (batteryEfficiency / 100)
+            batteryCharge += arbitrageChargeEnergy
+            currentSoc += (arbitrageChargeEnergy / totalBatteryCapacity) * 100
+            currentSoc = Math.min(currentSoc, maxSocLimit)
+            gridImport += maxArbitrageCharge
+            totalGridImport += maxArbitrageCharge
+            totalArbitrageCharge += maxArbitrageCharge
+            arbitrageChargedToday += maxArbitrageCharge
+            totalStored += arbitrageChargeEnergy
+          }
+        }
+      }
+      
     } else if (clippedGen >= load) {
-      // Case 1: Generation exceeds load
+      // ============================================
+      // NON-ARBITRAGE: Generation exceeds load
+      // ============================================
       usefulGen = load
       let excess = clippedGen - load
       potentialExport += excess
       
       // Try to store excess in battery
       if (battery.enabled && excess > 0 && analysisMode === 'pv-bess') {
-        const maxSocLimit = battery.maxSoc || 100
-        const minSocLimit = battery.minSoc || (100 - batteryDod)
-        
-        // Available capacity in kWh = total capacity * (maxSoc - currentSoc) / 100
         const availableCapacityKwh = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
-        
-        // Max energy that can be charged this hour considering:
-        // 1. Excess energy available
-        // 2. Charge power limit (kW = kWh per hour)
-        // 3. Available capacity in battery (accounting for efficiency losses)
         const maxChargeEnergy = Math.min(
-          excess,                                    // Available excess
-          totalChargePower,                          // Power limit (kW = kWh/h)
-          availableCapacityKwh / (batteryEfficiency / 100)  // Capacity limit (input energy needed)
+          excess,
+          totalChargePower,
+          availableCapacityKwh / (batteryEfficiency / 100)
         )
         
-        // Energy actually stored (after efficiency losses)
         batteryCharge = maxChargeEnergy * (batteryEfficiency / 100)
-        
-        // Update SOC
         currentSoc += (batteryCharge / totalBatteryCapacity) * 100
         currentSoc = Math.min(currentSoc, maxSocLimit)
-        
-        // Subtract charged energy from excess
         excess -= maxChargeEnergy
         totalStored += batteryCharge
       }
       
-      // Remaining excess is curtailed (Grid Zero = no export)
       curtailed = excess
       totalCurtailed += curtailed
       totalSelfConsumed += load
     } else {
-      // Case 2: Load exceeds generation
+      // ============================================
+      // NON-ARBITRAGE: Load exceeds generation
+      // ============================================
       usefulGen = clippedGen
       totalSelfConsumed += clippedGen
       let remaining = load - clippedGen
       
-      // Try to discharge battery (prioritize during peak hours)
-      if (battery.enabled && remaining > 0 && currentSoc > battery.minSoc && analysisMode === 'pv-bess') {
-        // Available energy in kWh = total capacity * (currentSoc - minSoc) / 100
-        const availableEnergyKwh = totalBatteryCapacity * (currentSoc - battery.minSoc) / 100
-        
-        // Max discharge considering:
-        // 1. Remaining load to cover
-        // 2. Discharge power limit
-        // 3. Available energy in battery
+      // Try to discharge battery
+      if (battery.enabled && remaining > 0 && currentSoc > absoluteMinSoc && analysisMode === 'pv-bess') {
+        const availableEnergyKwh = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
         const maxDischargeEnergy = Math.min(
           remaining,
           totalDischargePower,
@@ -140,7 +337,7 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
         
         batteryDischarge = maxDischargeEnergy
         currentSoc -= (batteryDischarge / totalBatteryCapacity) * 100
-        currentSoc = Math.max(currentSoc, battery.minSoc)
+        currentSoc = Math.max(currentSoc, absoluteMinSoc)
         remaining -= batteryDischarge
         totalDischarged += batteryDischarge
         totalSelfConsumed += batteryDischarge
@@ -156,59 +353,6 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
       deficit = remaining
       gridImport = remaining
       totalGridImport += gridImport
-    }
-    
-    // Arbitrage logic: Buy energy off-peak to charge battery, discharge during peak
-    if (arbitrageEnabled && battery.enabled && analysisMode === 'pv-bess') {
-      const maxSocLimit = battery.maxSoc || 100
-      
-      if (!isPeakHour) {
-        // Off-peak: Buy energy from grid to charge battery for arbitrage
-        const arbitrageSOCRoom = totalBatteryCapacity * (maxSocLimit - currentSoc) / 100
-        const dailyLimitRemaining = arbitrageDailyLimit > 0 
-          ? Math.max(0, arbitrageDailyLimit - arbitrageChargedToday)
-          : Infinity
-        
-        const maxArbitrageCharge = Math.min(
-          arbitrageSOCRoom / (batteryEfficiency / 100),
-          totalChargePower - batteryCharge, // Remaining charge power
-          dailyLimitRemaining
-        )
-        
-        if (maxArbitrageCharge > 0 && currentSoc < maxSocLimit) {
-          const arbitrageChargeEnergy = maxArbitrageCharge * (batteryEfficiency / 100)
-          batteryCharge += arbitrageChargeEnergy
-          currentSoc += (arbitrageChargeEnergy / totalBatteryCapacity) * 100
-          currentSoc = Math.min(currentSoc, maxSocLimit)
-          gridImport += maxArbitrageCharge
-          totalGridImport += maxArbitrageCharge
-          totalArbitrageCharge += maxArbitrageCharge
-          arbitrageChargedToday += maxArbitrageCharge
-          totalStored += arbitrageChargeEnergy
-        }
-      } else if (isPeakHour && arbitragePriority === 'arbitrage') {
-        // Peak hour with arbitrage priority: discharge more aggressively
-        const minSocForArbitrage = Math.max(battery.minSoc, arbitrageMinSoc)
-        const additionalDischargeAvailable = totalBatteryCapacity * (currentSoc - minSocForArbitrage) / 100
-        const additionalDischarge = Math.min(
-          additionalDischargeAvailable,
-          totalDischargePower - batteryDischarge
-        )
-        
-        if (additionalDischarge > 0) {
-          batteryDischarge += additionalDischarge
-          currentSoc -= (additionalDischarge / totalBatteryCapacity) * 100
-          currentSoc = Math.max(currentSoc, minSocForArbitrage)
-          totalArbitrageDischarge += additionalDischarge
-          totalDischarged += additionalDischarge
-          // Reduce grid import or create export
-          if (gridImport > 0) {
-            const reduction = Math.min(gridImport, additionalDischarge)
-            gridImport -= reduction
-            totalGridImport -= reduction
-          }
-        }
-      }
     }
     
     totalGenerated += clippedGen
@@ -241,7 +385,7 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     : 0
     
   const energyIndependence = totalConsumed > 0 
-    ? ((totalSelfConsumed + totalDischarged + totalGeneratorUsed) / totalConsumed) * 100 
+    ? ((totalSelfConsumed) / totalConsumed) * 100 
     : 0
 
   // Economic calculations
@@ -249,7 +393,7 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     hourlyData, 
     tariff, 
     totalConsumed, 
-    totalSelfConsumed + totalDischarged,
+    totalSelfConsumed,
     totalArbitrageCharge,
     totalArbitrageDischarge
   )
@@ -258,7 +402,7 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
   const sizing = calculateSizing(
     consumption,
     battery,
-    totalConsumed - totalSelfConsumed - totalDischarged
+    totalConsumed - totalSelfConsumed
   )
   
   return {

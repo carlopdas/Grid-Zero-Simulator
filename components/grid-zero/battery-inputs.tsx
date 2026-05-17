@@ -318,6 +318,54 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
             
             {battery.arbitrageEnabled && (
               <div className="space-y-4 pt-2">
+                <div className="space-y-3">
+                  <Label className="font-semibold">Estrategia de Operacao da Bateria</Label>
+                  <RadioGroup
+                    value={battery.arbitrageStrategy || 'auto_optimization'}
+                    onValueChange={(v) => onChange({ ...battery, arbitrageStrategy: v as 'auto_optimization' | 'solar_only' | 'arbitrage_only' })}
+                    className="space-y-3"
+                  >
+                    <div className="flex items-start space-x-3 rounded-lg border border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-900/20 p-3">
+                      <RadioGroupItem value="auto_optimization" id="auto_optimization" className="mt-1" />
+                      <div>
+                        <Label htmlFor="auto_optimization" className="text-sm font-medium cursor-pointer text-green-700 dark:text-green-400">
+                          Otimizacao Automatica (Recomendado)
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Bateria carrega fora ponta (comprando da rede) e descarrega na ponta. 
+                          Tambem armazena excesso solar. Maximiza economia financeira.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-3">
+                      <RadioGroupItem value="solar_only" id="solar_only" className="mt-1" />
+                      <div>
+                        <Label htmlFor="solar_only" className="text-sm font-medium cursor-pointer text-blue-700 dark:text-blue-400">
+                          Apenas Autoconsumo Solar
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Bateria carrega APENAS com excesso de geracao solar. 
+                          Descarrega para autoconsumo a qualquer hora. Nao compra da rede.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 p-3">
+                      <RadioGroupItem value="arbitrage_only" id="arbitrage_only" className="mt-1" />
+                      <div>
+                        <Label htmlFor="arbitrage_only" className="text-sm font-medium cursor-pointer text-amber-700 dark:text-amber-400">
+                          Apenas Arbitragem
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Bateria carrega da rede fora ponta e descarrega integralmente na ponta. 
+                          Ignora autoconsumo. Nao recomendado com FV.
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="arbitrageMinSoc">SOC Minimo Reservado para Emergencias (%)</Label>
                   <Input
@@ -330,43 +378,35 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
                     onChange={(e) => onChange({ ...battery, arbitrageMinSoc: parseFloat(e.target.value) || 10 })}
                     placeholder="10"
                   />
-                  <p className="text-xs text-muted-foreground">Reserva minima nao utilizada na arbitragem</p>
+                  <p className="text-xs text-muted-foreground">
+                    Reserva de emergencia - bateria NUNCA descarrega abaixo deste nivel
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Prioridade de Uso da Bateria</Label>
-                  <RadioGroup
-                    value={battery.arbitragePriority || 'self-consumption'}
-                    onValueChange={(v) => onChange({ ...battery, arbitragePriority: v as 'self-consumption' | 'arbitrage' })}
-                    className="space-y-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="self-consumption" id="self-consumption" />
-                      <Label htmlFor="self-consumption" className="text-sm cursor-pointer">
-                        Prioridade: Autoconsumo (descarga primeiro para carga local)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="arbitrage" id="arbitrage" />
-                      <Label htmlFor="arbitrage" className="text-sm cursor-pointer">
-                        Prioridade: Arbitragem (descarga no horario ponta)
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="arbitrageDailyLimit">Limite de Compra por Dia (kWh)</Label>
+                  <Label htmlFor="arbitrageDailyLimit">Limite de Compra da Rede por Dia (kWh)</Label>
                   <Input
                     id="arbitrageDailyLimit"
                     type="number"
                     min={0}
-                    step={1}
+                    step={10}
                     value={battery.arbitrageDailyLimit || 0}
                     onChange={(e) => onChange({ ...battery, arbitrageDailyLimit: parseFloat(e.target.value) || 0 })}
                     placeholder="0 = sem limite"
                   />
-                  <p className="text-xs text-muted-foreground">0 = sem limite. Limita quanto da bateria pode ser usado para arbitragem por dia</p>
+                  <p className="text-xs text-muted-foreground">
+                    0 = sem limite. Limita quanta energia pode ser comprada da rede para carregar a bateria por dia.
+                  </p>
+                </div>
+                
+                {/* Strategy explanation */}
+                <div className="rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground mb-2">Como funciona:</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li><strong>Fora Ponta (21:30 - 17:30):</strong> Bateria CARREGA da rede (tarifa baixa)</li>
+                    <li><strong>Ponta (17:30 - 21:30):</strong> Bateria DESCARREGA para a carga (evita tarifa alta)</li>
+                    <li><strong>Solar:</strong> Sempre armazenado quando excede consumo</li>
+                  </ul>
                 </div>
               </div>
             )}

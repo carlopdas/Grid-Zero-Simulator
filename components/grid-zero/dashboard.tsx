@@ -94,7 +94,7 @@ const defaultBattery: BatteryConfig = {
   quantity: 1,
   arbitrageEnabled: false,
   arbitrageMinSoc: 10,
-  arbitragePriority: 'self-consumption',
+  arbitrageStrategy: 'auto_optimization',
   arbitrageDailyLimit: 0
 }
 
