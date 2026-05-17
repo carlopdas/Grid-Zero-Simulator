@@ -125,8 +125,14 @@ export interface HourlySimulationResult {
   load: number
   curtailed: number
   soc: number
+  socSolar: number // SOC de origem solar
+  socGrid: number // SOC de origem rede (arbitragem)
   batteryCharge: number
+  batteryChargeSolar: number // Carga de origem solar
+  batteryChargeGrid: number // Carga de origem rede
   batteryDischarge: number
+  batteryDischargeSolar: number // Descarga de origem solar
+  batteryDischargeGrid: number // Descarga de origem rede (arbitragem)
   generatorOutput: number
   deficit: number
   gridExport: number
@@ -135,18 +141,37 @@ export interface HourlySimulationResult {
 }
 
 export interface EconomicResults {
+  // Daily values (kWh/dia)
   dailyGeneration: number
-  monthlySavings: number
+  dailySolarDirectKwh: number // Energia solar autoconsumida diretamente
+  dailyBatterySolarKwh: number // Energia solar descarregada da bateria
+  dailyBatteryGridKwh: number // Energia da rede descarregada da bateria (arbitragem)
+  dailyArbitrageChargeKwh: number // Energia comprada da rede para arbitragem
+  dailyArbitrageDischargeKwh: number // Energia descarregada na ponta (arbitragem)
+  
+  // Monthly savings breakdown (R$/mes) - TUDO EM BASE MENSAL
+  solarDirectSavings: number // Eco_Solar_Direta = kWh/dia × 30 × Tarifa
+  batterySolarSavings: number // Eco_Bateria_Solar = kWh/dia × 30 × Tarifa  
+  peakShavingSavings: number // Eco_Peak_Shaving
+  arbitrageBenefit: number // Descarga_Ponta × Tarifa_Ponta × 30
+  arbitrageCost: number // Compra_FP × Tarifa_FP × 30
+  arbitrageNetSavings: number // Eco_Arbitragem = Beneficio - Custo
+  
+  // Totals
+  monthlySavings: number // Soma de todos componentes
   annualSavings: number
+  dailySavings: number // monthlySavings / 30
+  
+  // Investment metrics
   paybackYears: number
   paybackDiscounted: number
   roi: number
   lcoe: number
+  irr: number
+  npv: number
+  
+  // Legacy (keep for compatibility)
   gridEnergySaved: number
-  peakShavingSavings: number
-  arbitrageSavings: number
-  irr: number // Taxa Interna de Retorno
-  npv: number // Valor Presente Liquido
 }
 
 export interface InvestmentConfig {
