@@ -86,10 +86,16 @@ export interface TariffConfig {
   energyRate: number
   te: number
   tusd: number
-  peakRate: number
-  offPeakRate: number
-  contractedDemand: number
+  peakRate: number // R$/kWh na ponta (TE + TUSD + encargos)
+  offPeakRate: number // R$/kWh fora ponta
+  contractedDemand: number // kW de demanda contratada
+  demandRate: number // R$/kW - tarifa de demanda
   peakHours: { start: number; end: number } // Now supports half-hour (e.g., 17.5 = 17:30)
+  // Consumo por posto tarifario
+  monthlyPeakConsumption: number // kWh/mes consumidos na ponta
+  monthlyOffPeakConsumption: number // kWh/mes consumidos fora ponta
+  // Fatura atual (teto de economia)
+  currentMonthlyBill: number // R$/mes - valor da ultima conta
   // Lei 14.300/2022
   gdType: GDType
   accessRequestDate?: string // ISO date string
@@ -149,18 +155,37 @@ export interface EconomicResults {
   dailyArbitrageChargeKwh: number // Energia comprada da rede para arbitragem
   dailyArbitrageDischargeKwh: number // Energia descarregada na ponta (arbitragem)
   
+  // Hourly detailed savings (para calculo correto com tarifa horaria)
+  solarDirectPeakKwh: number // kWh solar direto na ponta
+  solarDirectOffPeakKwh: number // kWh solar direto fora ponta
+  batterySolarPeakKwh: number // kWh bateria solar descarregada na ponta
+  batterySolarOffPeakKwh: number // kWh bateria solar descarregada fora ponta
+  
   // Monthly savings breakdown (R$/mes) - TUDO EM BASE MENSAL
-  solarDirectSavings: number // Eco_Solar_Direta = kWh/dia × 30 × Tarifa
-  batterySolarSavings: number // Eco_Bateria_Solar = kWh/dia × 30 × Tarifa  
-  peakShavingSavings: number // Eco_Peak_Shaving
+  solarDirectSavings: number // Calculado hora a hora com tarifa do horario
+  batterySolarSavings: number // Calculado hora a hora com tarifa do horario
+  peakShavingSavings: number // (reducao_demanda_kW) x (tarifa_demanda_R$_kW)
   arbitrageBenefit: number // Descarga_Ponta × Tarifa_Ponta × 30
   arbitrageCost: number // Compra_FP × Tarifa_FP × 30
   arbitrageNetSavings: number // Eco_Arbitragem = Beneficio - Custo
   
-  // Totals
-  monthlySavings: number // Soma de todos componentes
+  // Totals BEFORE cap
+  grossMonthlySavings: number // Soma bruta de todos componentes
+  
+  // Totals AFTER cap (economia real)
+  monthlySavings: number // min(grossMonthlySavings, fatura * 0.95)
   annualSavings: number
-  dailySavings: number // monthlySavings / 30
+  dailySavings: number
+  
+  // Cap info
+  currentMonthlyBill: number // Fatura informada pelo usuario
+  savingsCapApplied: boolean // true se o teto foi aplicado
+  savingsCapPercent: number // % da fatura que a economia representa
+  
+  // Demand reduction (peak shaving)
+  originalPeakDemandKw: number // Demanda maxima original
+  reducedPeakDemandKw: number // Demanda maxima com bateria
+  demandReductionKw: number // Reducao de demanda
   
   // Investment metrics
   paybackYears: number

@@ -146,6 +146,85 @@ export function EconomicAnalysis({ results, tariff }: EconomicAnalysisProps) {
         </Card>
       </div>
 
+      {/* Cap Warning/Info */}
+      {economic.currentMonthlyBill > 0 && (
+        <Card className={`animate-fade-in-up ${economic.savingsCapApplied ? 'border-2 border-amber-400 dark:border-amber-600' : 'border border-green-200 dark:border-green-800'}`}>
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${economic.savingsCapApplied ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
+                {economic.savingsCapApplied ? (
+                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <Info className="h-5 w-5 text-green-600 dark:text-green-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className={`font-semibold ${economic.savingsCapApplied ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'}`}>
+                  {economic.savingsCapApplied 
+                    ? 'Teto de Economia Aplicado (95% da fatura)' 
+                    : 'Economia dentro do limite realista'}
+                </p>
+                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Fatura atual:</span>
+                    <p className="font-semibold text-foreground">R$ {economic.currentMonthlyBill.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Teto (95%):</span>
+                    <p className="font-semibold text-foreground">R$ {(economic.currentMonthlyBill * 0.95).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Economia bruta:</span>
+                    <p className={`font-semibold ${economic.savingsCapApplied ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                      R$ {(economic.grossMonthlySavings || economic.monthlySavings).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">% da fatura:</span>
+                    <p className={`font-semibold ${(economic.savingsCapPercent || 0) > 90 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}`}>
+                      {(economic.savingsCapPercent || (economic.monthlySavings / economic.currentMonthlyBill * 100)).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                {economic.savingsCapApplied && (
+                  <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                    A economia bruta calculada foi limitada ao teto de 95% da fatura para garantir resultados realistas.
+                    Considere revisar os parametros de geracao, tarifas ou consumo.
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Demand Reduction Info */}
+      {(economic.demandReductionKw || 0) > 0 && (
+        <Card className="glass-card section-purple animate-fade-in-up">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30">
+                  <Zap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Peak Shaving - Reducao de Demanda</p>
+                  <p className="text-xs text-muted-foreground">Demanda maxima reduzida de {(economic.originalPeakDemandKw || 0).toFixed(1)} kW para {(economic.reducedPeakDemandKw || 0).toFixed(1)} kW</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  -{(economic.demandReductionKw || 0).toFixed(1)} kW
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  x R$ {(tariff.demandRate || 0).toFixed(2)}/kW = R$ {(economic.peakShavingSavings || 0).toFixed(2)}/mes
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Economy by Component */}
       <Card className="glass-card border-0 animate-fade-in-up">
         <CardHeader className="pb-4">

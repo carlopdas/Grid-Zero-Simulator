@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { TariffConfig, GDType, GD_COMPENSATION_TABLE } from "@/lib/grid-zero-types"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { DollarSign, Clock, Info, Scale } from "lucide-react"
+import { DollarSign, Clock, Info, Scale, AlertTriangle, Receipt } from "lucide-react"
 
 interface TariffInputsProps {
   tariff: TariffConfig
@@ -46,7 +46,7 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
     
     const date = new Date(dateStr)
     const gd1Deadline = new Date('2022-01-07')
-    const gd2Deadline = new Date('2023-01-07') // 12 meses apos a lei
+    const gd2Deadline = new Date('2023-01-07')
     
     let gdType: GDType = 'GD3'
     if (date <= gd1Deadline) {
@@ -69,6 +69,9 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
   }
 
+  // Validate required fields
+  const hasRequiredFields = tariff.currentMonthlyBill > 0 && tariff.peakRate > 0 && tariff.offPeakRate > 0
+
   return (
     <Card className="glass-card section-blue animate-fade-in-up">
       <CardHeader className="pb-4">
@@ -85,12 +88,227 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
           />
         </div>
         <CardDescription className="text-muted-foreground">
-          Configure as tarifas para analise economica (opcional)
+          Configure as tarifas para analise economica realista
         </CardDescription>
       </CardHeader>
       
       {tariff.enabled && (
         <CardContent className="space-y-6">
+          {/* REQUIRED: Current Monthly Bill - HIGHLIGHTED */}
+          <div className="space-y-4 rounded-xl border-2 border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 p-4">
+            <div className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <Label className="text-base font-semibold text-foreground">Fatura Atual (OBRIGATORIO)</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p className="font-semibold mb-1">Teto de Economia</p>
+                  <p className="text-xs">A economia calculada nunca ultrapassara 95% deste valor. Isso garante resultados realistas.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentBill" className="font-semibold">Valor da Ultima Conta de Energia (R$/mes)</Label>
+                <Input
+                  id="currentBill"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={tariff.currentMonthlyBill || ''}
+                  onChange={(e) => onChange({ ...tariff, currentMonthlyBill: parseFloat(e.target.value) || 0 })}
+                  placeholder="40625.60"
+                  className="text-lg font-semibold"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este valor sera usado como teto maximo de economia (95% da fatura)
+                </p>
+              </div>
+            </div>
+            
+            {!tariff.currentMonthlyBill && (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-100 dark:bg-amber-800/30 p-2 text-xs text-amber-800 dark:text-amber-200">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Informe a fatura atual para calculos realistas de economia</span>
+              </div>
+            )}
+          </div>
+
+          {/* Consumption by Time Period */}
+          <div className="space-y-4 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-4">
+            <Label className="text-base font-semibold text-foreground">Consumo por Posto Tarifario (Opcional)</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="peakConsumption">Consumo Ponta (kWh/mes)</Label>
+                <Input
+                  id="peakConsumption"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={tariff.monthlyPeakConsumption || ''}
+                  onChange={(e) => onChange({ ...tariff, monthlyPeakConsumption: parseFloat(e.target.value) || 0 })}
+                  placeholder="5546"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offPeakConsumption">Consumo Fora Ponta (kWh/mes)</Label>
+                <Input
+                  id="offPeakConsumption"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={tariff.monthlyOffPeakConsumption || ''}
+                  onChange={(e) => onChange({ ...tariff, monthlyOffPeakConsumption: parseFloat(e.target.value) || 0 })}
+                  placeholder="36692"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total informado: {((tariff.monthlyPeakConsumption || 0) + (tariff.monthlyOffPeakConsumption || 0)).toLocaleString()} kWh/mes
+            </p>
+          </div>
+
+          {/* Peak/Off-Peak Rates - REQUIRED */}
+          <div className="space-y-4">
+            <Label className="flex items-center gap-2 text-base font-semibold">
+              <Clock className="h-4 w-4" />
+              Tarifas de Energia (OBRIGATORIO)
+            </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="peakRate">Tarifa Ponta (R$/kWh)</Label>
+                <Input
+                  id="peakRate"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={tariff.peakRate || ''}
+                  onChange={(e) => onChange({ ...tariff, peakRate: parseFloat(e.target.value) || 0 })}
+                  placeholder="2.74733"
+                  className={!tariff.peakRate ? 'border-amber-400' : ''}
+                />
+                <p className="text-xs text-muted-foreground">TE + TUSD + encargos no horario ponta</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offPeakRate">Tarifa Fora Ponta (R$/kWh)</Label>
+                <Input
+                  id="offPeakRate"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={tariff.offPeakRate || ''}
+                  onChange={(e) => onChange({ ...tariff, offPeakRate: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.52568"
+                  className={!tariff.offPeakRate ? 'border-amber-400' : ''}
+                />
+                <p className="text-xs text-muted-foreground">TE + TUSD + encargos fora ponta</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Demand Rate */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="demandRate">Tarifa de Demanda (R$/kW)</Label>
+              <Input
+                id="demandRate"
+                type="number"
+                min={0}
+                step={0.01}
+                value={tariff.demandRate || ''}
+                onChange={(e) => onChange({ ...tariff, demandRate: parseFloat(e.target.value) || 0 })}
+                placeholder="25.00"
+              />
+              <p className="text-xs text-muted-foreground">Custo por kW de demanda contratada</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="demand">Demanda Contratada (kW)</Label>
+              <Input
+                id="demand"
+                type="number"
+                min={0}
+                step={1}
+                value={tariff.contractedDemand || ''}
+                onChange={(e) => onChange({ ...tariff, contractedDemand: parseFloat(e.target.value) || 0 })}
+                placeholder="135"
+              />
+            </div>
+          </div>
+
+          {/* Peak Hours with half-hour support */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Horario de Ponta</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="peakStart">Inicio</Label>
+                <select
+                  id="peakStart"
+                  value={tariff.peakHours.start}
+                  onChange={(e) => onChange({ 
+                    ...tariff, 
+                    peakHours: { ...tariff.peakHours, start: parseFloat(e.target.value) }
+                  })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {TIME_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="peakEnd">Fim</Label>
+                <select
+                  id="peakEnd"
+                  value={tariff.peakHours.end}
+                  onChange={(e) => onChange({ 
+                    ...tariff, 
+                    peakHours: { ...tariff.peakHours, end: parseFloat(e.target.value) }
+                  })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {TIME_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ponta: {formatTime(tariff.peakHours.start)} - {formatTime(tariff.peakHours.end)} | 
+              Fora Ponta: {formatTime(tariff.peakHours.end)} - {formatTime(tariff.peakHours.start)}
+            </p>
+          </div>
+
+          {/* TE and TUSD (optional detail) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="te">TE - Tarifa de Energia (R$/kWh)</Label>
+              <Input
+                id="te"
+                type="number"
+                min={0}
+                step={0.01}
+                value={tariff.te || ''}
+                onChange={(e) => onChange({ ...tariff, te: parseFloat(e.target.value) || 0 })}
+                placeholder="0.45"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tusd">TUSD (R$/kWh)</Label>
+              <Input
+                id="tusd"
+                type="number"
+                min={0}
+                step={0.01}
+                value={tariff.tusd || ''}
+                onChange={(e) => onChange({ ...tariff, tusd: parseFloat(e.target.value) || 0 })}
+                placeholder="0.40"
+              />
+            </div>
+          </div>
+
           {/* Lei 14.300/2022 - GD Type */}
           <div className="space-y-4 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-4">
             <div className="flex items-center gap-2">
@@ -152,127 +370,8 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
                     {((tariff.compensationFactor || 1) * 100).toFixed(1)}%
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">Calculado automaticamente</p>
               </div>
             </div>
-          </div>
-
-          {/* TE and TUSD */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="te">TE - Tarifa de Energia (R$/kWh)</Label>
-              <Input
-                id="te"
-                type="number"
-                min={0}
-                step={0.01}
-                value={tariff.te || ''}
-                onChange={(e) => onChange({ ...tariff, te: parseFloat(e.target.value) || 0 })}
-                placeholder="0.45"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tusd">TUSD (R$/kWh)</Label>
-              <Input
-                id="tusd"
-                type="number"
-                min={0}
-                step={0.01}
-                value={tariff.tusd || ''}
-                onChange={(e) => onChange({ ...tariff, tusd: parseFloat(e.target.value) || 0 })}
-                placeholder="0.40"
-              />
-            </div>
-          </div>
-
-          {/* Peak/Off-Peak with half-hour support */}
-          <div className="space-y-4">
-            <Label className="flex items-center gap-2 text-base font-semibold">
-              <Clock className="h-4 w-4" />
-              Tarifas Horarias
-            </Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="peakRate">Tarifa Ponta (R$/kWh)</Label>
-                <Input
-                  id="peakRate"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={tariff.peakRate || ''}
-                  onChange={(e) => onChange({ ...tariff, peakRate: parseFloat(e.target.value) || 0 })}
-                  placeholder="1.20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="offPeakRate">Tarifa Fora Ponta (R$/kWh)</Label>
-                <Input
-                  id="offPeakRate"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={tariff.offPeakRate || ''}
-                  onChange={(e) => onChange({ ...tariff, offPeakRate: parseFloat(e.target.value) || 0 })}
-                  placeholder="0.65"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Peak Hours with half-hour support */}
-          <div className="space-y-4">
-            <Label className="text-base font-semibold">Horario de Ponta</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="peakStart">Inicio Horario Ponta</Label>
-                <select
-                  id="peakStart"
-                  value={tariff.peakHours.start}
-                  onChange={(e) => onChange({ 
-                    ...tariff, 
-                    peakHours: { ...tariff.peakHours, start: parseFloat(e.target.value) }
-                  })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {TIME_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="peakEnd">Fim Horario Ponta</Label>
-                <select
-                  id="peakEnd"
-                  value={tariff.peakHours.end}
-                  onChange={(e) => onChange({ 
-                    ...tariff, 
-                    peakHours: { ...tariff.peakHours, end: parseFloat(e.target.value) }
-                  })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {TIME_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Fora Ponta: {formatTime(tariff.peakHours.end)} ate {formatTime(tariff.peakHours.start)} (calculado automaticamente)
-            </p>
-          </div>
-
-          {/* Contracted Demand */}
-          <div className="space-y-2">
-            <Label htmlFor="demand">Demanda Contratada (kW)</Label>
-            <Input
-              id="demand"
-              type="number"
-              min={0}
-              step={1}
-              value={tariff.contractedDemand || ''}
-              onChange={(e) => onChange({ ...tariff, contractedDemand: parseFloat(e.target.value) || 0 })}
-              placeholder="100"
-            />
           </div>
 
           {/* Summary */}
@@ -280,25 +379,35 @@ export function TariffInputs({ tariff, onChange }: TariffInputsProps) {
             <p className="mb-2 text-sm font-semibold text-foreground">Resumo Tarifario</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-muted-foreground">Horario Ponta: </span>
-                <span className="font-medium text-foreground">
-                  {formatTime(tariff.peakHours.start)} - {formatTime(tariff.peakHours.end)}
+                <span className="text-muted-foreground">Fatura Atual: </span>
+                <span className="font-bold text-foreground">
+                  R$ {(tariff.currentMonthlyBill || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Diferenca Ponta/FP: </span>
+                <span className="text-muted-foreground">Teto Economia (95%): </span>
                 <span className="font-bold text-green-600 dark:text-green-400">
+                  R$ {((tariff.currentMonthlyBill || 0) * 0.95).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tarifa Ponta: </span>
+                <span className="font-medium text-foreground">R$ {(tariff.peakRate || 0).toFixed(5)}/kWh</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tarifa Fora Ponta: </span>
+                <span className="font-medium text-foreground">R$ {(tariff.offPeakRate || 0).toFixed(5)}/kWh</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Diferenca Ponta/FP: </span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">
                   R$ {((tariff.peakRate || 0) - (tariff.offPeakRate || 0)).toFixed(2)}/kWh
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Marco Legal: </span>
-                <span className="font-medium text-foreground">{tariff.gdType}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Compensacao: </span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">
-                  {((tariff.compensationFactor || 1) * 100).toFixed(1)}%
+                <span className="text-muted-foreground">Horario Ponta: </span>
+                <span className="font-medium text-foreground">
+                  {formatTime(tariff.peakHours.start)} - {formatTime(tariff.peakHours.end)}
                 </span>
               </div>
             </div>

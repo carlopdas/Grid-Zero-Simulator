@@ -428,7 +428,18 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
 
 function calculateEconomics(
   hourlyData: HourlySimulationResult[],
-  tariff: { enabled: boolean; energyRate: number; peakRate: number; offPeakRate: number; compensationFactor?: number; te?: number; tusd?: number },
+  tariff: { 
+    enabled: boolean
+    energyRate: number
+    peakRate: number
+    offPeakRate: number
+    compensationFactor?: number
+    te?: number
+    tusd?: number
+    demandRate?: number
+    contractedDemand?: number
+    currentMonthlyBill?: number
+  },
   solarDirectKwh: number,
   batterySolarKwh: number,
   batteryGridKwh: number,
@@ -442,15 +453,26 @@ function calculateEconomics(
     dailyBatteryGridKwh: batteryGridKwh,
     dailyArbitrageChargeKwh: arbitrageChargeKwh,
     dailyArbitrageDischargeKwh: arbitrageDischargeKwh,
+    solarDirectPeakKwh: 0,
+    solarDirectOffPeakKwh: 0,
+    batterySolarPeakKwh: 0,
+    batterySolarOffPeakKwh: 0,
     solarDirectSavings: 0,
     batterySolarSavings: 0,
     peakShavingSavings: 0,
     arbitrageBenefit: 0,
     arbitrageCost: 0,
     arbitrageNetSavings: 0,
+    grossMonthlySavings: 0,
     monthlySavings: 0,
     annualSavings: 0,
     dailySavings: 0,
+    currentMonthlyBill: tariff.currentMonthlyBill || 0,
+    savingsCapApplied: false,
+    savingsCapPercent: 0,
+    originalPeakDemandKw: 0,
+    reducedPeakDemandKw: 0,
+    demandReductionKw: 0,
     paybackYears: 0,
     paybackDiscounted: 0,
     roi: 0,
@@ -465,40 +487,103 @@ function calculateEconomics(
   }
   
   const compensationFactor = tariff.compensationFactor || 1.0
-  const avgRate = (tariff.peakRate + tariff.offPeakRate) / 2
+  const currentMonthlyBill = tariff.currentMonthlyBill || 0
+  const demandRate = tariff.demandRate || 0
   
   // ============================================
-  // FORMULA CORRIGIDA - TUDO EM BASE MENSAL
+  // CALCULO HORA A HORA COM TARIFA DO HORARIO
   // ============================================
   
-  // 1. Eco_Solar_Direta = kWh/dia × 30 × Tarifa_Media
-  const solarDirectSavings = solarDirectKwh * 30 * avgRate * compensationFactor
+  let solarDirectPeakKwh = 0
+  let solarDirectOffPeakKwh = 0
+  let batterySolarPeakKwh = 0
+  let batterySolarOffPeakKwh = 0
+  let batteryGridPeakKwh = 0
+  let batteryGridOffPeakKwh = 0
   
-  // 2. Eco_Bateria_Solar = kWh/dia × 30 × Tarifa_Media
-  // Energia solar que foi armazenada e depois descarregada
-  const batterySolarSavings = batterySolarKwh * 30 * avgRate * compensationFactor
+  let solarDirectSavingsHourly = 0
+  let batterySolarSavingsHourly = 0
   
-  // 3. Eco_Peak_Shaving - calculated from hourly data
-  let peakShavingSavings = 0
+  // Track demand for peak shaving
+  let originalPeakDemandKw = 0
+  let reducedPeakDemandKw = 0
+  
   hourlyData.forEach(h => {
+    const rate = h.isPeakHour ? tariff.peakRate : tariff.offPeakRate
+    
+    // Solar direct consumption - uses tariff of the hour
+    solarDirectSavingsHourly += h.usefulGeneration * rate * compensationFactor
+    
     if (h.isPeakHour) {
-      // Savings from using solar/battery during peak instead of buying expensive grid
-      const savedInPeak = h.usefulGeneration + h.batteryDischargeSolar + h.batteryDischargeGrid
-      peakShavingSavings += savedInPeak * (tariff.peakRate - tariff.offPeakRate)
+      solarDirectPeakKwh += h.usefulGeneration
+      batterySolarPeakKwh += h.batteryDischargeSolar
+      batteryGridPeakKwh += h.batteryDischargeGrid
+    } else {
+      solarDirectOffPeakKwh += h.usefulGeneration
+      batterySolarOffPeakKwh += h.batteryDischargeSolar
+      batteryGridOffPeakKwh += h.batteryDischargeGrid
+    }
+    
+    // Battery solar discharge - uses tariff of the hour
+    batterySolarSavingsHourly += h.batteryDischargeSolar * rate * compensationFactor
+    
+    // Track demand (load) for peak shaving
+    if (h.isPeakHour) {
+      const originalDemand = h.load
+      const reducedDemand = h.load - h.usefulGeneration - h.batteryDischarge
+      
+      if (originalDemand > originalPeakDemandKw) {
+        originalPeakDemandKw = originalDemand
+      }
+      if (reducedDemand > reducedPeakDemandKw) {
+        reducedPeakDemandKw = Math.max(0, reducedDemand)
+      }
     }
   })
-  peakShavingSavings = peakShavingSavings * 30 * compensationFactor
   
-  // 4. Eco_Arbitragem = (Descarga_Ponta × Tarifa_Ponta) - (Compra_FP × Tarifa_FP)
-  // CORRIGIDO: Beneficio - Custo (positivo = lucro)
-  const arbitrageBenefit = arbitrageDischargeKwh * 30 * tariff.peakRate
+  // ============================================
+  // MONTHLY SAVINGS (x30)
+  // ============================================
+  
+  // 1. Eco_Solar_Direta = soma hora a hora x 30
+  const solarDirectSavings = solarDirectSavingsHourly * 30
+  
+  // 2. Eco_Bateria_Solar = soma hora a hora x 30
+  const batterySolarSavings = batterySolarSavingsHourly * 30
+  
+  // 3. Eco_Peak_Shaving = reducao_demanda_kW x tarifa_demanda_R$/kW
+  // CORRIGIDO: Usa tarifa de demanda, nao energia
+  const demandReductionKw = Math.max(0, originalPeakDemandKw - reducedPeakDemandKw)
+  const peakShavingSavings = demandReductionKw * demandRate
+  
+  // 4. Eco_Arbitragem = (Descarga_Ponta x Tarifa_Ponta) - (Compra_FP x Tarifa_FP) x 30
+  // Energia de arbitragem descarregada na ponta
+  const arbitrageBenefit = batteryGridPeakKwh * 30 * tariff.peakRate
   const arbitrageCost = arbitrageChargeKwh * 30 * tariff.offPeakRate
-  const arbitrageNetSavings = arbitrageBenefit - arbitrageCost
+  const arbitrageNetSavings = Math.max(0, arbitrageBenefit - arbitrageCost)
   
   // ============================================
-  // TOTAL MENSAL = Soma de todos componentes
+  // TOTAL BRUTO (antes do teto)
   // ============================================
-  const monthlySavings = solarDirectSavings + batterySolarSavings + peakShavingSavings + arbitrageNetSavings
+  const grossMonthlySavings = solarDirectSavings + batterySolarSavings + peakShavingSavings + arbitrageNetSavings
+  
+  // ============================================
+  // APLICAR TETO DE 95% DA FATURA
+  // ============================================
+  let monthlySavings = grossMonthlySavings
+  let savingsCapApplied = false
+  let savingsCapPercent = 0
+  
+  if (currentMonthlyBill > 0) {
+    const maxSavings = currentMonthlyBill * 0.95
+    savingsCapPercent = (grossMonthlySavings / currentMonthlyBill) * 100
+    
+    if (grossMonthlySavings > maxSavings) {
+      monthlySavings = maxSavings
+      savingsCapApplied = true
+    }
+  }
+  
   const dailySavings = monthlySavings / 30
   const annualSavings = monthlySavings * 12
   
@@ -509,15 +594,26 @@ function calculateEconomics(
     dailyBatteryGridKwh: batteryGridKwh,
     dailyArbitrageChargeKwh: arbitrageChargeKwh,
     dailyArbitrageDischargeKwh: arbitrageDischargeKwh,
+    solarDirectPeakKwh,
+    solarDirectOffPeakKwh,
+    batterySolarPeakKwh,
+    batterySolarOffPeakKwh,
     solarDirectSavings,
     batterySolarSavings,
     peakShavingSavings,
     arbitrageBenefit,
     arbitrageCost,
     arbitrageNetSavings,
+    grossMonthlySavings,
     monthlySavings,
     annualSavings,
     dailySavings,
+    currentMonthlyBill,
+    savingsCapApplied,
+    savingsCapPercent,
+    originalPeakDemandKw,
+    reducedPeakDemandKw,
+    demandReductionKw,
     paybackYears: 0,
     paybackDiscounted: 0,
     roi: 0,
