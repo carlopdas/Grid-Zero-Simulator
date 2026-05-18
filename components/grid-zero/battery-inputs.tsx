@@ -399,12 +399,115 @@ export function BatteryInputs({ battery, onChange }: BatteryInputsProps) {
                   </p>
                 </div>
                 
+                {/* Charge/Discharge Windows */}
+                <div className="space-y-4 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-4">
+                  <p className="font-semibold text-blue-700 dark:text-blue-400">Janelas de Operacao</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="chargeWindowStart">Inicio Carregamento (Fora Ponta)</Label>
+                      <Input
+                        id="chargeWindowStart"
+                        type="number"
+                        min={0}
+                        max={24}
+                        step={0.5}
+                        value={battery.chargeWindowStart ?? 21.5}
+                        onChange={(e) => onChange({ ...battery, chargeWindowStart: parseFloat(e.target.value) || 21.5 })}
+                        placeholder="21.5"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Ex: 21.5 = 21:30
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="chargeWindowEnd">Fim Carregamento</Label>
+                      <Input
+                        id="chargeWindowEnd"
+                        type="number"
+                        min={0}
+                        max={24}
+                        step={0.5}
+                        value={battery.chargeWindowEnd ?? 17.5}
+                        onChange={(e) => onChange({ ...battery, chargeWindowEnd: parseFloat(e.target.value) || 17.5 })}
+                        placeholder="17.5"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Ex: 17.5 = 17:30
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dischargeWindowStart">Inicio Descarga (Ponta)</Label>
+                      <Input
+                        id="dischargeWindowStart"
+                        type="number"
+                        min={0}
+                        max={24}
+                        step={0.5}
+                        value={battery.dischargeWindowStart ?? 17.5}
+                        onChange={(e) => onChange({ ...battery, dischargeWindowStart: parseFloat(e.target.value) || 17.5 })}
+                        placeholder="17.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dischargeWindowEnd">Fim Descarga</Label>
+                      <Input
+                        id="dischargeWindowEnd"
+                        type="number"
+                        min={0}
+                        max={24}
+                        step={0.5}
+                        value={battery.dischargeWindowEnd ?? 21.5}
+                        onChange={(e) => onChange({ ...battery, dischargeWindowEnd: parseFloat(e.target.value) || 21.5 })}
+                        placeholder="21.5"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="targetSocAtPeakStart">SOC Alvo no Inicio da Ponta (%)</Label>
+                    <Input
+                      id="targetSocAtPeakStart"
+                      type="number"
+                      min={50}
+                      max={100}
+                      step={5}
+                      value={battery.targetSocAtPeakStart ?? 95}
+                      onChange={(e) => onChange({ ...battery, targetSocAtPeakStart: parseFloat(e.target.value) || 95 })}
+                      placeholder="95"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      A bateria tentara atingir este SOC antes do inicio da janela de descarga
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Cost per kWh for marginal analysis */}
+                <div className="space-y-2">
+                  <Label htmlFor="costPerKwh">Custo por kWh de Bateria (R$/kWh)</Label>
+                  <Input
+                    id="costPerKwh"
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={battery.costPerKwh ?? 1500}
+                    onChange={(e) => onChange({ ...battery, costPerKwh: parseFloat(e.target.value) || 1500 })}
+                    placeholder="1500"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Custo unitario da bateria para calculo de retorno marginal
+                  </p>
+                </div>
+                
                 {/* Strategy explanation */}
                 <div className="rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
                   <p className="font-medium text-foreground mb-2">Como funciona:</p>
                   <ul className="space-y-1 list-disc list-inside">
-                    <li><strong>Fora Ponta (21:30 - 17:30):</strong> Bateria CARREGA da rede (tarifa baixa)</li>
-                    <li><strong>Ponta (17:30 - 21:30):</strong> Bateria DESCARREGA para a carga (evita tarifa alta)</li>
+                    <li><strong>Janela de Carga ({battery.chargeWindowStart ?? 21.5}h - {battery.chargeWindowEnd ?? 17.5}h):</strong> Bateria CARREGA da rede (tarifa baixa)</li>
+                    <li><strong>Janela de Descarga ({battery.dischargeWindowStart ?? 17.5}h - {battery.dischargeWindowEnd ?? 21.5}h):</strong> Bateria DESCARREGA (evita tarifa alta)</li>
                     <li><strong>Solar:</strong> Sempre armazenado quando excede consumo</li>
                   </ul>
                 </div>

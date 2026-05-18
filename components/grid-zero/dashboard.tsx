@@ -95,7 +95,13 @@ const defaultBattery: BatteryConfig = {
   arbitrageEnabled: false,
   arbitrageMinSoc: 10,
   arbitrageStrategy: 'auto_optimization',
-  arbitrageDailyLimit: 0
+  arbitrageDailyLimit: 0,
+  chargeWindowStart: 21.5,
+  chargeWindowEnd: 17.5,
+  dischargeWindowStart: 17.5,
+  dischargeWindowEnd: 21.5,
+  targetSocAtPeakStart: 95,
+  costPerKwh: 1500
 }
 
 const defaultGenerator: GeneratorConfig = {
@@ -177,6 +183,11 @@ const emptyResults: SimulationResults = {
     lcoe: 0,
     irr: 0,
     npv: 0,
+    marginalSavingsPerBattery: 0,
+    marginalPaybackYears: 0,
+    isOptimallySized: true,
+    peakDeficitKwh: 0,
+    peakCoveragePercent: 0,
     gridEnergySaved: 0
   },
   sizing: {

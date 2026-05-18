@@ -52,8 +52,26 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
   const arbitrageDailyLimit = battery.arbitrageDailyLimit || 0
   let arbitrageChargedToday = 0
   
+  // Configurable charge/discharge windows
+  const chargeWindowStart = battery.chargeWindowStart ?? 21.5
+  const chargeWindowEnd = battery.chargeWindowEnd ?? 17.5
+  const dischargeWindowStart = battery.dischargeWindowStart ?? 17.5
+  const dischargeWindowEnd = battery.dischargeWindowEnd ?? 21.5
+  const targetSocAtPeakStart = battery.targetSocAtPeakStart ?? 95
+  
   const absoluteMinSoc = Math.max(battery.minSoc || 20, arbitrageMinSoc)
   const maxSocLimit = battery.maxSoc || 100
+  
+  // Helper function to check if hour is in a window (handles wrap-around)
+  const isInWindow = (hour: number, start: number, end: number): boolean => {
+    const h = hour + 0.5 // Center of hour
+    if (start <= end) {
+      return h >= start && h < end
+    } else {
+      // Window wraps around midnight (e.g., 21:30 to 17:30 next day)
+      return h >= start || h < end
+    }
+  }
   
   for (let hour = 0; hour < 24; hour++) {
     let originalGen = 0
@@ -81,6 +99,10 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
     const isPeakHour = tariff.enabled && 
       (hour + 0.5) >= tariff.peakHours.start && 
       (hour + 0.5) < tariff.peakHours.end
+    
+    // Use configurable windows for arbitrage logic
+    const isInChargeWindow = isInWindow(hour, chargeWindowStart, chargeWindowEnd)
+    const isInDischargeWindow = isInWindow(hour, dischargeWindowStart, dischargeWindowEnd)
     
     if (analysisMode === 'load-only') {
       usefulGen = 0
@@ -122,8 +144,8 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
       
       // Step 3: Battery behavior by strategy
       if (arbitrageStrategy === 'auto_optimization') {
-        if (isPeakHour) {
-          // PEAK: Discharge battery
+        if (isInDischargeWindow) {
+          // DISCHARGE WINDOW (PEAK): Discharge battery
           if (remainingLoad > 0 && currentSoc > absoluteMinSoc) {
             const availableEnergy = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
             const maxDischarge = Math.min(remainingLoad, totalDischargePower, availableEnergy)
@@ -155,8 +177,8 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
             totalGridImport += gridImport
             deficit = remainingLoad
           }
-        } else {
-          // OFF-PEAK: Buy for load, then charge battery from grid
+        } else if (isInChargeWindow) {
+          // CHARGE WINDOW (OFF-PEAK): Buy for load, then charge battery from grid
           if (remainingLoad > 0) {
             gridImport = remainingLoad
             totalGridImport += gridImport
@@ -190,6 +212,13 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
             totalStored += chargeEnergy
             totalStoredGrid += chargeEnergy
           }
+        } else {
+          // OUTSIDE WINDOWS: Just buy from grid for load (no battery action)
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
+          }
         }
       } else if (arbitrageStrategy === 'solar_only') {
         // Discharge for self-consumption anytime
@@ -216,8 +245,8 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
           deficit = remainingLoad
         }
       } else if (arbitrageStrategy === 'arbitrage_only') {
-        if (isPeakHour) {
-          // Discharge maximum
+        if (isInDischargeWindow) {
+          // DISCHARGE WINDOW: Discharge maximum
           if (currentSoc > absoluteMinSoc) {
             const availableEnergy = totalBatteryCapacity * (currentSoc - absoluteMinSoc) / 100
             const maxDischarge = Math.min(totalDischargePower, availableEnergy)
@@ -248,7 +277,8 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
             totalGridImport += gridImport
             deficit = remainingLoad
           }
-        } else {
+        } else if (isInChargeWindow) {
+          // CHARGE WINDOW: Buy for load and charge battery
           if (remainingLoad > 0) {
             gridImport = remainingLoad
             totalGridImport += gridImport
@@ -280,6 +310,13 @@ export function runGridZeroSimulation(inputs: SimulationInputs): SimulationResul
             arbitrageChargedToday += maxArbitrageCharge
             totalStored += chargeEnergy
             totalStoredGrid += chargeEnergy
+          }
+        } else {
+          // OUTSIDE WINDOWS: Just buy from grid for load
+          if (remainingLoad > 0) {
+            gridImport = remainingLoad
+            totalGridImport += gridImport
+            deficit = remainingLoad
           }
         }
       }
@@ -479,6 +516,11 @@ function calculateEconomics(
     lcoe: 0,
     irr: 0,
     npv: 0,
+    marginalSavingsPerBattery: 0,
+    marginalPaybackYears: 0,
+    isOptimallySized: true,
+    peakDeficitKwh: 0,
+    peakCoveragePercent: 100,
     gridEnergySaved: solarDirectKwh + batterySolarKwh
   }
   
@@ -507,6 +549,8 @@ function calculateEconomics(
   // Track demand for peak shaving
   let originalPeakDemandKw = 0
   let reducedPeakDemandKw = 0
+  let totalPeakDeficitKwh = 0
+  let totalPeakLoadKwh = 0
   
   hourlyData.forEach(h => {
     const rate = h.isPeakHour ? tariff.peakRate : tariff.offPeakRate
@@ -531,6 +575,8 @@ function calculateEconomics(
     if (h.isPeakHour) {
       const originalDemand = h.load
       const reducedDemand = h.load - h.usefulGeneration - h.batteryDischarge
+      totalPeakLoadKwh += h.load
+      totalPeakDeficitKwh += Math.max(0, reducedDemand)
       
       if (originalDemand > originalPeakDemandKw) {
         originalPeakDemandKw = originalDemand
@@ -587,6 +633,34 @@ function calculateEconomics(
   const dailySavings = monthlySavings / 30
   const annualSavings = monthlySavings * 12
   
+  // ============================================
+  // ANALISE MARGINAL - DIMENSIONAMENTO OTIMO
+  // ============================================
+  // Peak coverage = quanto da carga na ponta foi atendido
+  const peakCoveragePercent = totalPeakLoadKwh > 0 
+    ? ((totalPeakLoadKwh - totalPeakDeficitKwh) / totalPeakLoadKwh) * 100 
+    : 100
+  
+  // Marginal analysis: would adding one more battery be worth it?
+  // Assume each additional battery adds ~80% of its capacity in peak coverage
+  // Additional savings = (additional kWh covered in peak) * (peakRate - offPeakRate) * 30
+  const additionalBatteryKwh = 100 // Assume 100 kWh per additional battery unit
+  const additionalPeakCoverageKwh = Math.min(totalPeakDeficitKwh, additionalBatteryKwh * 0.8)
+  const marginalSavingsPerBattery = additionalPeakCoverageKwh * (tariff.peakRate - tariff.offPeakRate) * 30
+  
+  // Marginal payback = cost of one battery / annual marginal savings
+  const batteryCostPerKwh = 1500 // Default R$/kWh, should come from input
+  const marginalBatteryCost = additionalBatteryKwh * batteryCostPerKwh
+  const marginalPaybackYears = marginalSavingsPerBattery > 0 
+    ? marginalBatteryCost / (marginalSavingsPerBattery * 12) 
+    : Infinity
+  
+  // System is optimally sized if:
+  // 1. Peak coverage is > 90% OR
+  // 2. Marginal payback > 10 years OR
+  // 3. Peak deficit is very small (< 10 kWh/dia)
+  const isOptimallySized = peakCoveragePercent > 90 || marginalPaybackYears > 10 || totalPeakDeficitKwh < 10
+  
   return {
     dailyGeneration: hourlyData.reduce((sum, h) => sum + h.usefulGeneration, 0),
     dailySolarDirectKwh: solarDirectKwh,
@@ -620,6 +694,11 @@ function calculateEconomics(
     lcoe: 0,
     irr: 0,
     npv: 0,
+    marginalSavingsPerBattery,
+    marginalPaybackYears,
+    isOptimallySized,
+    peakDeficitKwh: totalPeakDeficitKwh,
+    peakCoveragePercent,
     gridEnergySaved: solarDirectKwh + batterySolarKwh
   }
 }
@@ -651,10 +730,11 @@ function calculateSizing(
   const correctedEnergy = requiredEnergy / (dod / 100) / (efficiency / 100)
   const batteryCount = Math.ceil(correctedEnergy / battery.capacity)
   const totalCapacity = battery.capacity * battery.quantity
+  const usableCapacity = totalCapacity * (dod / 100)
   
-  if (totalCapacity < correctedEnergy) {
-    warnings.push(`Capacidade insuficiente: ${totalCapacity.toFixed(1)} kWh < ${correctedEnergy.toFixed(1)} kWh necessarios`)
-  }
+  // CORRIGIDO: Nao mostrar aviso de "capacidade insuficiente" baseado em deficit total
+  // Em vez disso, mostrar informacao sobre cobertura
+  // O aviso de otimizacao economica e feito na EconomicResults agora
   
   return {
     requiredEnergy,

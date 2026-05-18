@@ -72,6 +72,14 @@ export interface BatteryConfig {
   arbitrageMinSoc: number // Min SOC reserved for emergencies - NEVER discharge below this
   arbitrageStrategy: BatteryStrategy // New: clearer strategy selection
   arbitrageDailyLimit: number // 0 = no limit, max kWh to buy from grid per day
+  // Configurable charge/discharge windows
+  chargeWindowStart: number // Hour to start charging from grid (e.g., 21.5 = 21:30)
+  chargeWindowEnd: number // Hour to stop charging from grid (e.g., 17.5 = 17:30 next day)
+  dischargeWindowStart: number // Hour to start discharging (ponta) (e.g., 17.5 = 17:30)
+  dischargeWindowEnd: number // Hour to stop discharging (e.g., 21.5 = 21:30)
+  targetSocAtPeakStart: number // Target SOC (%) at the start of discharge window (default 95)
+  // Investment for marginal analysis
+  costPerKwh: number // R$/kWh - cost of battery capacity for ROI calculation
 }
 
 export interface GeneratorConfig {
@@ -194,6 +202,13 @@ export interface EconomicResults {
   lcoe: number
   irr: number
   npv: number
+  
+  // Marginal analysis for optimal sizing
+  marginalSavingsPerBattery: number // R$/mes extra savings per additional battery
+  marginalPaybackYears: number // Years to payback one additional battery
+  isOptimallySized: boolean // true if adding more batteries would reduce ROI
+  peakDeficitKwh: number // kWh deficit during peak hours (after solar/battery)
+  peakCoveragePercent: number // % of peak demand covered by solar+battery
   
   // Legacy (keep for compatibility)
   gridEnergySaved: number

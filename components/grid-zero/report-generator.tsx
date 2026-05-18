@@ -247,16 +247,43 @@ export function ReportGenerator({
                 </div>
               </div>
               
-              {results.sizing.warnings.length > 0 && (
-                <div className="mt-4 rounded-2xl bg-red-500/10 p-4">
-                  <p className="mb-2 font-medium text-red-400">Avisos:</p>
-                  <ul className="list-inside list-disc text-sm text-red-300">
-                    {results.sizing.warnings.map((warning, idx) => (
-                      <li key={idx}>{warning}</li>
-                    ))}
-                  </ul>
+              {/* Optimization Analysis - replaces old warnings */}
+              <div className={`mt-4 rounded-2xl p-4 ${
+                results.economic.isOptimallySized 
+                  ? 'bg-green-500/10' 
+                  : 'bg-amber-500/10'
+              }`}>
+                <div className="flex items-start gap-3">
+                  {results.economic.isOptimallySized ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-green-400">Sistema Otimizado Economicamente</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          A bateria atual atende {results.economic.peakCoveragePercent?.toFixed(1) || 0}% da demanda no horario ponta.
+                          {results.economic.peakDeficitKwh > 0 && (
+                            <span> O deficit restante ({results.economic.peakDeficitKwh?.toFixed(1)} kWh/dia) nao justifica investimento adicional.</span>
+                          )}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                        Analise
+                      </Badge>
+                      <div>
+                        <p className="font-medium text-amber-400">Oportunidade de Otimizacao</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Cobertura atual na ponta: {results.economic.peakCoveragePercent?.toFixed(1) || 0}%.
+                          Adicionar bateria traria economia marginal de R$ {results.economic.marginalSavingsPerBattery?.toFixed(2) || 0}/mes
+                          com payback de {results.economic.marginalPaybackYears === Infinity ? '∞' : results.economic.marginalPaybackYears?.toFixed(1) || '∞'} anos.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         )}
