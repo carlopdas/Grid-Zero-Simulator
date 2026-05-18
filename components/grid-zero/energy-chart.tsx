@@ -24,12 +24,12 @@ interface EnergyChartProps {
 
 // Chart colors using CSS variables
 const COLORS = {
-  load: 'oklch(0.5 0.15 250)',
-  solar: 'oklch(0.7 0.18 85)',
-  storage: 'oklch(0.55 0.18 145)',
-  clipping: 'oklch(0.6 0.2 25)',
+  load: 'oklch(0.5 0.15 250)', // Blue for client load
+  solar: 'oklch(0.7 0.18 85)', // Yellow for solar generation
+  batteryDischarge: '#e74c3c', // Red for battery discharge (energy being delivered)
+  clipping: 'oklch(0.6 0.2 25)', // Orange for curtailed
   soc: 'oklch(0.4 0.12 145)',
-  batteryChargeGrid: 'oklch(0.6 0.2 35)', // Orange for grid charging
+  batteryChargeGrid: '#2ecc71', // Green for grid charging (buying energy)
   batteryChargeSolar: 'oklch(0.6 0.15 145)', // Green for solar charging
 }
 
@@ -69,7 +69,7 @@ export function EnergyChart({ data }: EnergyChartProps) {
         <CardDescription className="text-muted-foreground">
           Comparativo entre geracao, consumo e operacao da bateria
           {hasGridCharging && (
-            <span className="ml-2 text-orange-500 dark:text-orange-400 font-medium">
+            <span className="ml-2 text-green-500 dark:text-green-400 font-medium">
               (Inclui carga da bateria via rede)
             </span>
           )}
@@ -92,9 +92,9 @@ export function EnergyChart({ data }: EnergyChartProps) {
                   <stop offset="5%" stopColor={COLORS.solar} stopOpacity={0.8}/>
                   <stop offset="95%" stopColor={COLORS.solar} stopOpacity={0.1}/>
                 </linearGradient>
-                <linearGradient id="gradStorage" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.storage} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={COLORS.storage} stopOpacity={0.1}/>
+                <linearGradient id="gradBatteryDischarge" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.batteryDischarge} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={COLORS.batteryDischarge} stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
@@ -203,14 +203,14 @@ export function EnergyChart({ data }: EnergyChartProps) {
                 barSize={8}
               />
               
-              {/* Battery Discharge */}
+              {/* Battery Discharge - Red color (energy being delivered) */}
               <Area
                 type="monotone"
                 dataKey="Bateria Descarga"
-                stroke={COLORS.storage}
+                stroke={COLORS.batteryDischarge}
                 strokeWidth={2}
                 fillOpacity={1}
-                fill="url(#gradStorage)"
+                fill="url(#gradBatteryDischarge)"
               />
               
               {/* Zoom/Brush */}
